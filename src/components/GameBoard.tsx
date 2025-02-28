@@ -11,14 +11,12 @@ const BASE_CELL_SIZES = {
 interface GameBoardProps {
   board: (number | null)[][];
   onCellClick: (row: number, col: number) => void;
-  playerSymbols: string[];
   winningCells: [number, number][];
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({
   board,
   onCellClick,
-  playerSymbols,
   winningCells,
 }) => {
   // Get board dimensions

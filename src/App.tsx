@@ -167,7 +167,6 @@ const App: React.FC = () => {
             <GameBoard
               board={board}
               onCellClick={handleCellClick}
-              playerSymbols={PLAYER_SYMBOLS}
               winningCells={winningCells}
             />
           </div>
