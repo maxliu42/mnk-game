@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { CellPosition, GridType } from '../types/game.types';
 
 // Cell size in pixels for different board size categories
 const BASE_CELL_SIZES = {
@@ -8,16 +9,84 @@ const BASE_CELL_SIZES = {
   'xlarge-board': 35, // Larger than 10x10
 };
 
+interface BoardCellProps {
+  cell: number | null;
+  row: number;
+  col: number;
+  isWinning: boolean;
+  isSelected: boolean;
+  symbolSizeClass: string;
+  optimalCellSize: string;
+  gridType: GridType;
+  onClick: () => void;
+}
+
+const BoardCell: React.FC<BoardCellProps> = ({
+  cell,
+  row,
+  col,
+  isWinning,
+  isSelected,
+  symbolSizeClass,
+  optimalCellSize,
+  gridType,
+  onClick
+}) => {
+  // Build class names for the cell
+  let cellClassName = 'cell';
+  if (gridType === GridType.HEX) {
+    cellClassName += ' hex-cell';
+  }
+  if (cell !== null) {
+    cellClassName += ` player${cell + 1}`;
+  }
+  if (isWinning) {
+    cellClassName += ' winning-line';
+  }
+  if (isSelected) {
+    cellClassName += ' selected';
+  }
+
+  // Generate cell styles based on grid type
+  const cellStyle = {
+    aspectRatio: gridType === GridType.SQUARE ? '1 / 1' : 'auto',
+    padding: 0,
+    minWidth: optimalCellSize,
+    minHeight: optimalCellSize,
+    margin: '0',
+    borderRadius: '0',
+    // Add any extra styles for hex cells here
+  };
+  
+  return (
+    <button
+      key={`${row}-${col}`}
+      className={cellClassName}
+      onClick={onClick}
+      aria-label={`Cell ${row},${col}`}
+      data-row={row}
+      data-col={col}
+      style={cellStyle}
+    >
+      {cell !== null && <div className={`symbol ${symbolSizeClass}`}></div>}
+    </button>
+  );
+};
+
 interface GameBoardProps {
   board: (number | null)[][];
   onCellClick: (row: number, col: number) => void;
-  winningCells: [number, number][];
+  winningCells: CellPosition[];
+  selectedCell: CellPosition | null;
+  gridType?: GridType;
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({
   board,
   onCellClick,
   winningCells,
+  selectedCell,
+  gridType = GridType.SQUARE,
 }) => {
   // Get board dimensions
   const rowCount = board.length || 3;
@@ -49,50 +118,40 @@ const GameBoard: React.FC<GameBoardProps> = ({
     );
   };
 
-  // Render the cell content (X or O symbol)
-  const renderCellContent = (cell: number | null) => {
-    if (cell === null) return null;
-    return <div className={`symbol ${symbolSizeClass}`}></div>;
+  // Check if a cell is currently selected
+  const isCellSelected = (row: number, col: number) => {
+    return selectedCell ? selectedCell[0] === row && selectedCell[1] === col : false;
+  };
+
+  // Determine grid wrapper classes and styles based on grid type
+  const gridClassName = `game-board ${boardSizeClass} ${gridType === GridType.HEX ? 'hex-grid' : 'square-grid'}`;
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: `repeat(${colCount}, 1fr)`,
+    gridTemplateRows: `repeat(${rowCount}, 1fr)`,
+    gap: gridType === GridType.SQUARE ? '0' : '2px', // Adjust for hex grid
   };
 
   return (
     <div
-      className={`game-board ${boardSizeClass}`}
-      style={{
-        gridTemplateColumns: `repeat(${colCount}, 1fr)`,
-        gridTemplateRows: `repeat(${rowCount}, 1fr)`,
-        gap: '0'
-      }}
+      className={gridClassName}
+      style={gridStyle}
     >
       {board.map((row, rowIndex) =>
-        row.map((cell, colIndex) => {
-          let cellClassName = 'cell';
-          if (cell !== null) {
-            cellClassName += ` player${cell + 1}`;
-          }
-          if (isWinningCell(rowIndex, colIndex)) {
-            cellClassName += ' winning-line';
-          }
-          
-          return (
-            <button
-              key={`${rowIndex}-${colIndex}`}
-              className={cellClassName}
-              onClick={() => onCellClick(rowIndex, colIndex)}
-              aria-label={`Cell ${rowIndex},${colIndex}`}
-              style={{
-                aspectRatio: '1 / 1',
-                padding: 0,
-                minWidth: optimalCellSize,
-                minHeight: optimalCellSize,
-                margin: '0',
-                borderRadius: '0'
-              }}
-            >
-              {renderCellContent(cell)}
-            </button>
-          );
-        })
+        row.map((cell, colIndex) => (
+          <BoardCell
+            key={`${rowIndex}-${colIndex}`}
+            cell={cell}
+            row={rowIndex}
+            col={colIndex}
+            isWinning={isWinningCell(rowIndex, colIndex)}
+            isSelected={isCellSelected(rowIndex, colIndex)}
+            symbolSizeClass={symbolSizeClass}
+            optimalCellSize={optimalCellSize}
+            gridType={gridType}
+            onClick={() => onCellClick(rowIndex, colIndex)}
+          />
+        ))
       )}
     </div>
   );

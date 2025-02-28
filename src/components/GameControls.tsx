@@ -1,13 +1,29 @@
 import React, { useState } from 'react';
+import { GameConfig, GridType } from '../types/game.types';
+
+interface GamePreset {
+  name: string;
+  m: number;
+  n: number;
+  k: number;
+}
+
+// Predefined game presets
+const GAME_PRESETS: GamePreset[] = [
+  { name: 'Tic-Tac-Toe', m: 3, n: 3, k: 3 },
+  { name: 'Gomoku', m: 15, n: 15, k: 5 },
+  { name: 'Connect Four', m: 6, n: 7, k: 4 }
+];
 
 interface GameControlsProps {
-  onStartGame: (m: number, n: number, k: number) => void;
+  onStartGame: (m: number, n: number, k: number, config?: GameConfig) => void;
 }
 
 const GameControls: React.FC<GameControlsProps> = ({ onStartGame }) => {
   const [m, setM] = useState(3);
   const [n, setN] = useState(3);
   const [k, setK] = useState(3);
+  const [allowMovingOpponentPieces, setAllowMovingOpponentPieces] = useState(true);
   const [error, setError] = useState('');
 
   const handleStartGame = () => {
@@ -29,7 +45,16 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame }) => {
 
     // Clear any errors and start the game
     setError('');
-    onStartGame(m, n, k);
+    
+    // Create a game config object
+    const config: GameConfig = {
+      boardSize: { m, n },
+      winLength: k,
+      gridType: GridType.SQUARE, // Default to square grid for now
+      allowMovingOpponentPieces
+    };
+    
+    onStartGame(m, n, k, config);
   };
 
   // Handle input changes with validation
@@ -41,6 +66,13 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame }) => {
     if (!isNaN(numValue) && numValue > 0) {
       setter(numValue);
     }
+  };
+
+  // Apply preset configuration
+  const applyPreset = (preset: GamePreset) => {
+    setM(preset.m);
+    setN(preset.n);
+    setK(preset.k);
   };
 
   return (
@@ -82,6 +114,18 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame }) => {
           />
         </div>
       </div>
+      
+      <div className="checkbox-group">
+        <label htmlFor="move-opponent-pieces">
+          <input
+            id="move-opponent-pieces"
+            type="checkbox"
+            checked={allowMovingOpponentPieces}
+            onChange={(e) => setAllowMovingOpponentPieces(e.target.checked)}
+          />
+          Allow moving opponent's pieces
+        </label>
+      </div>
 
       {error && <p className="error-message">{error}</p>}
 
@@ -94,36 +138,15 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame }) => {
       <div className="game-presets">
         <h2>Quick Start Presets</h2>
         <div className="preset-buttons">
-          <button
-            className="btn btn-secondary"
-            onClick={() => {
-              setM(3);
-              setN(3);
-              setK(3);
-            }}
-          >
-            Tic-Tac-Toe (3,3,3)
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={() => {
-              setM(15);
-              setN(15);
-              setK(5);
-            }}
-          >
-            Gomoku (15,15,5)
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={() => {
-              setM(6);
-              setN(7);
-              setK(4);
-            }}
-          >
-            Connect Four (6,7,4)
-          </button>
+          {GAME_PRESETS.map((preset) => (
+            <button
+              key={preset.name}
+              className="btn btn-secondary"
+              onClick={() => applyPreset(preset)}
+            >
+              {preset.name} ({preset.m},{preset.n},{preset.k})
+            </button>
+          ))}
         </div>
       </div>
     </div>
