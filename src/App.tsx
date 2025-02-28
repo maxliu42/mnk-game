@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import GameBoard from './components/GameBoard.tsx';
+import { GameBoard } from './components/GameBoard.tsx';
 import GameControls from './components/GameControls.tsx';
 import GameInfo from './components/GameInfo.tsx';
 import { 
@@ -18,15 +18,16 @@ import {
   GameMove
 } from './types/game.types';
 
-// Define player symbols
-const PLAYER_SYMBOLS = ['X', 'O'];
+// Define player symbols using emojis for better visual distinction
+const PLAYER_SYMBOLS = ['🦩', '🎊', '🥪', '🔹', '💜', '💚'];
 
 // Default game configuration
 const DEFAULT_CONFIG: GameConfig = {
   boardSize: { m: 3, n: 3 },
   winLength: 3,
   gridType: GridType.SQUARE,
-  allowMovingOpponentPieces: true // Enable moving opponent pieces by default
+  allowMovingOpponentPieces: true, // Enable moving opponent pieces by default
+  playerCount: 2 // Default to 2 players
 };
 
 const App: React.FC = () => {
@@ -37,6 +38,7 @@ const App: React.FC = () => {
   const [allowMovingOpponentPieces, setAllowMovingOpponentPieces] = useState<boolean>(
     DEFAULT_CONFIG.allowMovingOpponentPieces
   );
+  const [playerCount, setPlayerCount] = useState<number>(DEFAULT_CONFIG.playerCount);
   const [isGameStarted, setIsGameStarted] = useState(false);
   
   // Game state
@@ -219,8 +221,8 @@ const App: React.FC = () => {
       return;
     }
     
-    // Switch player
-    setCurrentPlayer(currentPlayer === 0 ? 1 : 0);
+    // Switch to next player (handle multiple players)
+    setCurrentPlayer((currentPlayer + 1) % playerCount);
   };
   
   // Cancel the current selection
@@ -235,6 +237,7 @@ const App: React.FC = () => {
       setWinLength(config.winLength);
       setGridType(config.gridType);
       setAllowMovingOpponentPieces(config.allowMovingOpponentPieces);
+      setPlayerCount(config.playerCount);
     } else {
       setBoardSize({ m, n });
       setWinLength(k);
@@ -285,6 +288,7 @@ const App: React.FC = () => {
               winningCells={winningCells}
               selectedCell={selectedCell}
               gridType={gridType}
+              playerSymbols={PLAYER_SYMBOLS}
             />
           </div>
           

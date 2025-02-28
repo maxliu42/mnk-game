@@ -23,6 +23,7 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame }) => {
   const [m, setM] = useState(3);
   const [n, setN] = useState(3);
   const [k, setK] = useState(3);
+  const [playerCount, setPlayerCount] = useState(2);
   const [allowMovingOpponentPieces, setAllowMovingOpponentPieces] = useState(true);
   const [error, setError] = useState('');
 
@@ -51,7 +52,8 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame }) => {
       boardSize: { m, n },
       winLength: k,
       gridType: GridType.SQUARE, // Default to square grid for now
-      allowMovingOpponentPieces
+      allowMovingOpponentPieces,
+      playerCount
     };
     
     onStartGame(m, n, k, config);
@@ -112,6 +114,21 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame }) => {
             value={k}
             onChange={(e) => handleInputChange(setK, e.target.value)}
           />
+        </div>
+      </div>
+      
+      <div className="number-input-group">
+        <label htmlFor="player-count">Number of Players</label>
+        <div className="player-count-input">
+          <input
+            id="player-count"
+            type="range"
+            min="2"
+            max="6"
+            value={playerCount}
+            onChange={(e) => setPlayerCount(parseInt(e.target.value, 10))}
+          />
+          <span className="player-count-value">{playerCount}</span>
         </div>
       </div>
       

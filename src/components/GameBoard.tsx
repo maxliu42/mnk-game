@@ -3,7 +3,7 @@ import { CellPosition, GridType } from '../types/game.types';
 
 // Cell size in pixels for different board size categories
 const BASE_CELL_SIZES = {
-  'small-board': 60, // 3x3 boards
+  'small-board': 65, // 3x3 boards - increased from 60 for better emoji display
   'medium-board': 50, // 4x4 to 5x5 boards
   'large-board': 45, // 6x6 to 10x10 boards
   'xlarge-board': 35, // Larger than 10x10
@@ -18,6 +18,7 @@ interface BoardCellProps {
   symbolSizeClass: string;
   optimalCellSize: string;
   gridType: GridType;
+  playerSymbols: string[];
   onClick: () => void;
 }
 
@@ -30,6 +31,7 @@ const BoardCell: React.FC<BoardCellProps> = ({
   symbolSizeClass,
   optimalCellSize,
   gridType,
+  playerSymbols,
   onClick
 }) => {
   // Build class names for the cell
@@ -51,10 +53,13 @@ const BoardCell: React.FC<BoardCellProps> = ({
   const cellStyle = {
     aspectRatio: gridType === GridType.SQUARE ? '1 / 1' : 'auto',
     padding: 0,
-    minWidth: optimalCellSize,
-    minHeight: optimalCellSize,
+    width: optimalCellSize,
+    height: optimalCellSize,
+    maxWidth: optimalCellSize,
+    maxHeight: optimalCellSize,
     margin: '0',
     borderRadius: '0',
+    overflow: 'hidden', // Ensure content doesn't overflow
     // Add any extra styles for hex cells here
   };
   
@@ -68,7 +73,11 @@ const BoardCell: React.FC<BoardCellProps> = ({
       data-col={col}
       style={cellStyle}
     >
-      {cell !== null && <div className={`symbol ${symbolSizeClass}`}></div>}
+      {cell !== null && (
+        <div className={`symbol ${symbolSizeClass}`}>
+          {playerSymbols[cell]}
+        </div>
+      )}
     </button>
   );
 };
@@ -79,14 +88,16 @@ interface GameBoardProps {
   winningCells: CellPosition[];
   selectedCell: CellPosition | null;
   gridType?: GridType;
+  playerSymbols: string[];
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({
+export const GameBoard: React.FC<GameBoardProps> = ({
   board,
   onCellClick,
   winningCells,
   selectedCell,
   gridType = GridType.SQUARE,
+  playerSymbols,
 }) => {
   // Get board dimensions
   const rowCount = board.length || 3;
@@ -149,12 +160,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
             symbolSizeClass={symbolSizeClass}
             optimalCellSize={optimalCellSize}
             gridType={gridType}
+            playerSymbols={playerSymbols}
             onClick={() => onCellClick(rowIndex, colIndex)}
           />
         ))
       )}
     </div>
   );
-};
-
-export default GameBoard; 
+}; 

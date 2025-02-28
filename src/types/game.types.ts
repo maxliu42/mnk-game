@@ -64,6 +64,7 @@ export interface GameConfig {
   winLength: number;
   gridType: GridType;
   allowMovingOpponentPieces: boolean;
+  playerCount: number; // Number of players (2-6)
 }
 
 /**
