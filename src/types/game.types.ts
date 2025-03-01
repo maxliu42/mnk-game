@@ -57,6 +57,15 @@ export enum GridType {
 }
 
 /**
+ * Represents an individual player's configuration
+ */
+export interface PlayerConfig {
+  symbol: string;
+  color: string;
+  name: string;
+}
+
+/**
  * Represents the game configuration
  */
 export interface GameConfig {
@@ -65,6 +74,7 @@ export interface GameConfig {
   gridType: GridType;
   allowMovingOpponentPieces: boolean;
   playerCount: number; // Number of players (2-6)
+  playerConfigs?: PlayerConfig[]; // Optional player configurations
 }
 
 /**

@@ -1,11 +1,11 @@
 import React from 'react';
-import { MoveType } from '../types/game.types';
+import { MoveType, PlayerConfig } from '../types/game.types';
 
 interface GameInfoProps {
   currentPlayer: number;
   winner: number | null;
   isDraw: boolean;
-  playerSymbols: string[];
+  playerConfigs: PlayerConfig[];
   onResetGame: (returnToMenu?: boolean) => void;
   currentMoveType?: MoveType;
 }
@@ -17,25 +17,51 @@ const GameInfo: React.FC<GameInfoProps> = ({
   currentPlayer,
   winner,
   isDraw,
-  playerSymbols,
+  playerConfigs,
   onResetGame,
   currentMoveType = MoveType.PLACE,
 }) => {
   // Generate the status message based on game state
   const getStatusMessage = () => {
     if (winner !== null) {
-      return `Player ${winner + 1} (${playerSymbols[winner]}) wins!`;
+      const winnerConfig = playerConfigs[winner];
+      return (
+        <>
+          <span 
+            className="player-symbol" 
+            style={{ color: winnerConfig.color }}
+          >
+            {winnerConfig.symbol}
+          </span>
+          <span>{winnerConfig.name} wins!</span>
+        </>
+      );
     }
     
     if (isDraw) {
       return 'Game ended in a draw!';
     }
     
+    const currentConfig = playerConfigs[currentPlayer];
     const moveTypeText = currentMoveType === MoveType.PLACE 
       ? 'placing a stone' 
       : 'moving an opponent\'s stone';
     
-    return `Current player: Player ${currentPlayer + 1} (${playerSymbols[currentPlayer]}) - ${moveTypeText}`;
+    return (
+      <>
+        <span className="current-player-indicator">
+          <span 
+            className="player-symbol" 
+            style={{ color: currentConfig.color }}
+          >
+            {currentConfig.symbol}
+          </span>
+        </span>
+        <span>
+          {currentConfig.name}'s turn - {moveTypeText}
+        </span>
+      </>
+    );
   };
   
   const isGameOver = winner !== null || isDraw;

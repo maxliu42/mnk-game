@@ -15,11 +15,21 @@ import {
   GameConfig, 
   GridType, 
   MoveType,
-  GameMove
+  GameMove,
+  PlayerConfig
 } from './types/game.types';
 
-// Define player symbols using emojis for better visual distinction
-const PLAYER_SYMBOLS = ['🦩', '🎊', '🥪', '🔹', '💜', '💚'];
+// Define default player configurations
+const DEFAULT_PLAYER_CONFIGS: PlayerConfig[] = [
+  { symbol: '🦊', color: '#EF4444', name: 'Player 1' },
+  { symbol: '🐼', color: '#3B82F6', name: 'Player 2' },
+  { symbol: '🦄', color: '#10B981', name: 'Player 3' },
+  { symbol: '🐯', color: '#F59E0B', name: 'Player 4' },
+  { symbol: '🐸', color: '#8B5CF6', name: 'Player 5' },
+  { symbol: '🦁', color: '#EC4899', name: 'Player 6' },
+  { symbol: '🐙', color: '#06B6D4', name: 'Player 7' },
+  { symbol: '🦉', color: '#D97706', name: 'Player 8' }
+];
 
 // Default game configuration
 const DEFAULT_CONFIG: GameConfig = {
@@ -27,7 +37,8 @@ const DEFAULT_CONFIG: GameConfig = {
   winLength: 3,
   gridType: GridType.SQUARE,
   allowMovingOpponentPieces: true, // Enable moving opponent pieces by default
-  playerCount: 2 // Default to 2 players
+  playerCount: 2, // Default to 2 players
+  playerConfigs: DEFAULT_PLAYER_CONFIGS.slice(0, 2) // Initialize with first 2 player configs
 };
 
 const App: React.FC = () => {
@@ -39,6 +50,7 @@ const App: React.FC = () => {
     DEFAULT_CONFIG.allowMovingOpponentPieces
   );
   const [playerCount, setPlayerCount] = useState<number>(DEFAULT_CONFIG.playerCount);
+  const [playerConfigs, setPlayerConfigs] = useState<PlayerConfig[]>(DEFAULT_CONFIG.playerConfigs || []);
   const [isGameStarted, setIsGameStarted] = useState(false);
   
   // Game state
@@ -52,6 +64,23 @@ const App: React.FC = () => {
   
   // Create a ref for the board container
   const boardContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Set CSS variables for player colors when player configs change
+  useEffect(() => {
+    const root = document.documentElement;
+    playerConfigs.forEach((config, index) => {
+      root.style.setProperty(`--player${index+1}-color`, config.color);
+    });
+  }, [playerConfigs]);
+  
+  // Update player configs when player count changes
+  useEffect(() => {
+    // Only reset to default player configs if game hasn't started yet
+    if (!isGameStarted) {
+      // Update player configs when player count changes
+      setPlayerConfigs(DEFAULT_PLAYER_CONFIGS.slice(0, playerCount));
+    }
+  }, [playerCount, isGameStarted]);
   
   // Initialize the board when game starts
   useEffect(() => {
@@ -238,6 +267,11 @@ const App: React.FC = () => {
       setGridType(config.gridType);
       setAllowMovingOpponentPieces(config.allowMovingOpponentPieces);
       setPlayerCount(config.playerCount);
+      if (config.playerConfigs) {
+        setPlayerConfigs(config.playerConfigs);
+      } else {
+        setPlayerConfigs(DEFAULT_PLAYER_CONFIGS.slice(0, config.playerCount));
+      }
     } else {
       setBoardSize({ m, n });
       setWinLength(k);
@@ -268,6 +302,16 @@ const App: React.FC = () => {
     return selectedCell ? MoveType.MOVE : MoveType.PLACE;
   };
   
+  // Get current player's configuration
+  const getCurrentPlayerConfig = () => {
+    return playerConfigs[currentPlayer];
+  };
+
+  // Extract player symbols for the board
+  const getPlayerSymbols = () => {
+    return playerConfigs.map(config => config.symbol);
+  };
+  
   return (
     <div className="container">
       <header className="header">
@@ -277,7 +321,10 @@ const App: React.FC = () => {
       
       {!isGameStarted ? (
         <div className="game-container">
-          <GameControls onStartGame={startGame} />
+          <GameControls 
+            onStartGame={startGame} 
+            defaultPlayerConfigs={DEFAULT_PLAYER_CONFIGS}
+          />
         </div>
       ) : (
         <>
@@ -288,7 +335,7 @@ const App: React.FC = () => {
               winningCells={winningCells}
               selectedCell={selectedCell}
               gridType={gridType}
-              playerSymbols={PLAYER_SYMBOLS}
+              playerSymbols={getPlayerSymbols()}
             />
           </div>
           
@@ -296,7 +343,7 @@ const App: React.FC = () => {
             currentPlayer={currentPlayer}
             winner={winner}
             isDraw={isDraw}
-            playerSymbols={PLAYER_SYMBOLS}
+            playerConfigs={playerConfigs}
             onResetGame={resetGame}
             currentMoveType={getCurrentMoveType()}
           />

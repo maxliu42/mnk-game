@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { GameConfig, GridType } from '../types/game.types';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { GameConfig, GridType, PlayerConfig } from '../types/game.types';
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 
 interface GamePreset {
   name: string;
@@ -17,15 +18,73 @@ const GAME_PRESETS: GamePreset[] = [
 
 interface GameControlsProps {
   onStartGame: (m: number, n: number, k: number, config?: GameConfig) => void;
+  defaultPlayerConfigs: PlayerConfig[];
 }
 
-const GameControls: React.FC<GameControlsProps> = ({ onStartGame }) => {
+const GameControls: React.FC<GameControlsProps> = ({ onStartGame, defaultPlayerConfigs }) => {
   const [m, setM] = useState(3);
   const [n, setN] = useState(3);
   const [k, setK] = useState(3);
   const [playerCount, setPlayerCount] = useState(2);
   const [allowMovingOpponentPieces, setAllowMovingOpponentPieces] = useState(true);
+  const [playerConfigs, setPlayerConfigs] = useState<PlayerConfig[]>(() => defaultPlayerConfigs.slice(0, 2));
   const [error, setError] = useState('');
+  const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState<number | null>(null);
+  const prevPlayerCountRef = useRef<number>(2);
+
+  const handleClickOutside = useCallback((e: MouseEvent | React.MouseEvent) => {
+    // Check if the click was on an emoji picker
+    const target = e.target as HTMLElement;
+    
+    // Skip if clicking on the emoji picker or its container
+    if (target.closest('.emoji-picker-react') || 
+        target.closest('.emoji-picker-container') ||
+        target.closest('.player-symbol') ||
+        target.classList.contains('emoji-picker-overlay') ||
+        target.closest('.emoji-picker-overlay')) {
+      return;
+    }
+    
+    setShowEmojiPicker(null);
+  }, []);
+
+  // Update player configs when player count changes
+  useEffect(() => {
+    const prevCount = prevPlayerCountRef.current;
+    
+    // Only run if player count actually changed
+    if (prevCount !== playerCount) {
+      if (prevCount < playerCount) {
+        // Adding players - preserve existing and add new ones
+        const newConfigs = [...playerConfigs];
+        
+        // Add missing players
+        for (let i = prevCount; i < playerCount; i++) {
+          newConfigs.push(defaultPlayerConfigs[i]);
+        }
+        
+        setPlayerConfigs(newConfigs);
+      } else {
+        // Removing players - just trim the array
+        setPlayerConfigs(prev => prev.slice(0, playerCount));
+      }
+      
+      // Update the ref
+      prevPlayerCountRef.current = playerCount;
+    }
+  }, [playerCount, defaultPlayerConfigs]);
+
+  // Add event listener to close emoji picker when clicking outside
+  useEffect(() => {
+    if (showEmojiPicker !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker, handleClickOutside]);
 
   const handleStartGame = () => {
     // Validate inputs
@@ -53,7 +112,8 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame }) => {
       winLength: k,
       gridType: GridType.SQUARE, // Default to square grid for now
       allowMovingOpponentPieces,
-      playerCount
+      playerCount,
+      playerConfigs
     };
     
     onStartGame(m, n, k, config);
@@ -77,8 +137,55 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame }) => {
     setK(preset.k);
   };
 
+  // Update player name
+  const updatePlayerName = (index: number, name: string) => {
+    const newConfigs = [...playerConfigs];
+    newConfigs[index] = { ...newConfigs[index], name };
+    setPlayerConfigs(newConfigs);
+  };
+
+  // Toggle player name editing
+  const toggleEditingPlayer = (index: number) => {
+    setEditingPlayerId(editingPlayerId === index ? null : index);
+  };
+
+  // Toggle emoji picker for a player
+  const toggleEmojiPicker = (index: number) => {
+    setShowEmojiPicker(showEmojiPicker === index ? null : index);
+    // Close name editing if it's open
+    if (editingPlayerId !== null) {
+      setEditingPlayerId(null);
+    }
+  };
+
+  // Handle emoji selection
+  const handleEmojiSelect = (emojiData: EmojiClickData, index: number) => {
+    const newConfigs = [...playerConfigs];
+    newConfigs[index] = { ...newConfigs[index], symbol: emojiData.emoji };
+    setPlayerConfigs(newConfigs);
+    setShowEmojiPicker(null); // Close the picker after selection
+  };
+
+  const handleSymbolClick = (playerId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowEmojiPicker(playerId);
+  };
+
   return (
     <div className="game-setup">
+      {showEmojiPicker !== null && (
+        <div 
+          className="emoji-picker-overlay" 
+          onClick={(e) => {
+            // Only close if clicking directly on the overlay background
+            if (e.target === e.currentTarget) {
+              setShowEmojiPicker(null);
+            }
+            e.stopPropagation();
+          }}
+        ></div>
+      )}
+      
       <h2>Game Setup</h2>
 
       <div className="game-controls">
@@ -124,11 +231,68 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame }) => {
             id="player-count"
             type="range"
             min="2"
-            max="6"
+            max="8"
             value={playerCount}
             onChange={(e) => setPlayerCount(parseInt(e.target.value, 10))}
           />
           <span className="player-count-value">{playerCount}</span>
+        </div>
+      </div>
+      
+      <div className="player-preview">
+        <h3>Player Symbols</h3>
+        <div className="player-config-grid">
+          {playerConfigs.map((player, idx) => (
+            <div key={idx} className="player-config-item">
+              <div className="player-name-container">
+                {editingPlayerId === idx ? (
+                  <input
+                    type="text"
+                    value={player.name}
+                    onChange={(e) => updatePlayerName(idx, e.target.value)}
+                    onBlur={() => setEditingPlayerId(null)}
+                    autoFocus
+                    className="player-name-input"
+                  />
+                ) : (
+                  <span 
+                    className="player-name" 
+                    onClick={() => toggleEditingPlayer(idx)}
+                    title="Click to edit player name"
+                  >
+                    {player.name}
+                  </span>
+                )}
+              </div>
+              <div 
+                className="player-symbol" 
+                style={{ color: player.color }}
+                onClick={(e) => handleSymbolClick(idx, e)}
+              >
+                {player.symbol}
+              </div>
+              {showEmojiPicker === idx && (
+                <div 
+                  className="emoji-picker-container" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.nativeEvent.stopImmediatePropagation();
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                >
+                  <EmojiPicker 
+                    onEmojiClick={(emojiData) => handleEmojiSelect(emojiData, idx)} 
+                    lazyLoadEmojis={true}
+                    width={300}
+                    height={400}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
       
