@@ -51,6 +51,41 @@ export const getNeighbors = (
 };
 
 /**
+ * Counts consecutive pieces in a direction
+ */
+const countConsecutivePieces = (
+  board: (number | null)[][],
+  startRow: number,
+  startCol: number,
+  dirX: number,
+  dirY: number,
+  player: number,
+  boardSize: BoardSize
+): { count: number; cells: CellPosition[] } => {
+  let count = 0;
+  const cells: CellPosition[] = [];
+  
+  // Check consecutive cells in this direction
+  for (let i = 0; i < Math.max(boardSize.m, boardSize.n); i++) {
+    const newRow = startRow + dirX * i;
+    const newCol = startCol + dirY * i;
+    
+    // Check if cell is within bounds and has the player's symbol
+    if (
+      isValidPosition(newRow, newCol, boardSize) &&
+      board[newRow][newCol] === player
+    ) {
+      count++;
+      cells.push([newRow, newCol]);
+    } else {
+      break;
+    }
+  }
+  
+  return { count, cells };
+};
+
+/**
  * Checks if the current move results in a win
  */
 export const checkWin = (
@@ -65,35 +100,29 @@ export const checkWin = (
   const directions = DIRECTIONS[gridType];
   
   for (const [dx, dy] of directions) {
-    let count = 1; // Start with 1 for the current cell
-    const winningCells: CellPosition[] = [[row, col]];
+    // Check in positive direction (including the current cell)
+    const { count: forwardCount, cells: forwardCells } = countConsecutivePieces(
+      board, row, col, dx, dy, player, boardSize
+    );
     
-    // Check in both directions
-    for (let dir = -1; dir <= 1; dir += 2) {
-      // Skip the center (already counted)
-      if (dir === 0) continue;
-      
-      // Check consecutive cells in this direction
-      for (let i = 1; i < Math.max(boardSize.m, boardSize.n); i++) {
-        const newRow = row + dir * dx * i;
-        const newCol = col + dir * dy * i;
-        
-        // Check if cell is within bounds and has the player's symbol
-        if (
-          isValidPosition(newRow, newCol, boardSize) &&
-          board[newRow][newCol] === player
-        ) {
-          count++;
-          winningCells.push([newRow, newCol]);
-        } else {
-          break;
-        }
-      }
-    }
+    // Check in negative direction (excluding the current cell to avoid counting it twice)
+    const { count: backwardCount, cells: backwardCells } = countConsecutivePieces(
+      board, row + (-dx), col + (-dy), -dx, -dy, player, boardSize
+    );
+    
+    // Total count (forwardCount already includes the current cell)
+    const totalCount = forwardCount + backwardCount;
     
     // If we found enough cells in a row, it's a win
-    if (count >= winLength) {
-      return { isWin: true, winningCells };
+    if (totalCount >= winLength) {
+      // Combine cells from both directions
+      const allCells = [...forwardCells, ...backwardCells];
+      // Remove duplicate cells if any
+      const uniqueCells = allCells.filter((cell, index, self) => 
+        self.findIndex(c => c[0] === cell[0] && c[1] === cell[1]) === index
+      );
+      
+      return { isWin: true, winningCells: uniqueCells };
     }
   }
   
