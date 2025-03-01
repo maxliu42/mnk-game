@@ -22,20 +22,15 @@ interface BoardCellProps {
   onClick: () => void;
 }
 
-const BoardCell: React.FC<BoardCellProps> = ({
-  cell,
-  row,
-  col,
-  isWinning,
-  isSelected,
-  symbolSizeClass,
-  optimalCellSize,
-  gridType,
-  playerSymbols,
-  onClick
-}) => {
-  // Build class names for the cell
+// Helper function to generate cell class names
+const getCellClassNames = (
+  cell: number | null,
+  gridType: GridType,
+  isWinning: boolean,
+  isSelected: boolean
+): string => {
   let cellClassName = 'cell';
+  
   if (gridType === GridType.HEX) {
     cellClassName += ' hex-cell';
   }
@@ -48,9 +43,16 @@ const BoardCell: React.FC<BoardCellProps> = ({
   if (isSelected) {
     cellClassName += ' selected';
   }
+  
+  return cellClassName;
+};
 
-  // Generate cell styles based on grid type
-  const cellStyle = {
+// Helper function to generate cell styles
+const getCellStyles = (
+  gridType: GridType,
+  optimalCellSize: string
+): React.CSSProperties => {
+  return {
     aspectRatio: gridType === GridType.SQUARE ? '1 / 1' : 'auto',
     padding: 0,
     width: optimalCellSize,
@@ -60,12 +62,29 @@ const BoardCell: React.FC<BoardCellProps> = ({
     margin: '0',
     borderRadius: '0',
     overflow: 'hidden', // Ensure content doesn't overflow
-    // Add any extra styles for hex cells here
   };
+};
+
+const BoardCell: React.FC<BoardCellProps> = ({
+  cell,
+  row,
+  col,
+  isWinning,
+  isSelected,
+  symbolSizeClass,
+  optimalCellSize,
+  gridType,
+  playerSymbols,
+  onClick
+}) => {
+  // Build class names for the cell using the helper function
+  const cellClassName = getCellClassNames(cell, gridType, isWinning, isSelected);
+  
+  // Generate cell styles based on grid type
+  const cellStyle = getCellStyles(gridType, optimalCellSize);
   
   return (
     <button
-      key={`${row}-${col}`}
       className={cellClassName}
       onClick={onClick}
       aria-label={`Cell ${row},${col}`}
