@@ -46,6 +46,20 @@ export const DEFAULT_PLAYER_COLORS = [
 ];
 
 /**
+ * Default player configurations
+ */
+export const DEFAULT_PLAYER_CONFIGS = [
+  { symbol: "🦊", color: "#EF4444", name: "Player 1" },
+  { symbol: "🐼", color: "#3B82F6", name: "Player 2" },
+  { symbol: "🦄", color: "#10B981", name: "Player 3" },
+  { symbol: "🐯", color: "#F59E0B", name: "Player 4" },
+  { symbol: "🐸", color: "#8B5CF6", name: "Player 5" },
+  { symbol: "🦁", color: "#EC4899", name: "Player 6" },
+  { symbol: "🐙", color: "#06B6D4", name: "Player 7" },
+  { symbol: "🦉", color: "#D97706", name: "Player 8" },
+];
+
+/**
  * Game presets for quick start
  */
 export const GAME_PRESETS = [

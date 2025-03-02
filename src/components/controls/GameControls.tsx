@@ -3,13 +3,13 @@ import { GameConfig, GridType, PlayerConfig as PlayerConfigType } from '../../ty
 import { EmojiClickData } from 'emoji-picker-react';
 import PlayerConfig from './PlayerConfig';
 import { GAME_PRESETS } from '../../constants';
+import { useGameState } from '../../hooks';
 
 interface GameControlsProps {
-  onStartGame: (m: number, n: number, k: number, config?: GameConfig) => void;
   defaultPlayerConfigs: PlayerConfigType[];
 }
 
-const GameControls: React.FC<GameControlsProps> = ({ onStartGame, defaultPlayerConfigs }) => {
+const GameControls: React.FC<GameControlsProps> = ({ defaultPlayerConfigs }) => {
   const [m, setM] = useState(3);
   const [n, setN] = useState(3);
   const [k, setK] = useState(3);
@@ -20,6 +20,8 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame, defaultPlayerC
   const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState<number | null>(null);
   const prevPlayerCountRef = useRef<number>(2);
+  
+  const { startGame, setPlayerConfigs: updateGlobalPlayerConfigs } = useGameState();
 
   const handleClickOutside = useCallback((e: MouseEvent | React.MouseEvent) => {
     // Check if the click was on an emoji picker
@@ -94,6 +96,9 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame, defaultPlayerC
     // Clear any errors and start the game
     setError('');
     
+    // Update global player configs
+    updateGlobalPlayerConfigs(playerConfigs);
+    
     // Create a game config object
     const config: GameConfig = {
       boardSize: { m, n },
@@ -104,7 +109,7 @@ const GameControls: React.FC<GameControlsProps> = ({ onStartGame, defaultPlayerC
       playerConfigs
     };
     
-    onStartGame(m, n, k, config);
+    startGame(m, n, k, config);
   };
 
   // Handle input changes with validation

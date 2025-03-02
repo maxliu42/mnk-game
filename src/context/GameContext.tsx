@@ -61,84 +61,121 @@ type GameAction =
   | { type: 'SET_MOVE_TYPE'; payload: MoveType }
   | { type: 'SET_PLAYER_CONFIGS'; payload: PlayerConfig[] };
 
-// Create the game reducer
+/**
+ * Creates an immutable copy of a 2D array
+ */
+const deepCopyBoard = (board: (number | null)[][]): (number | null)[][] => {
+  return board.map(row => [...row]);
+};
+
+/**
+ * Game reducer that handles all game state transitions
+ */
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
-    case 'START_GAME':
+    case 'START_GAME': {
+      const { boardSize, winLength, gridType, playerConfigs, gameStarted } = action.payload;
+      
+      // Determine if we're starting a new game or just updating settings
+      const isStartingNewGame = gameStarted !== undefined ? gameStarted : true;
+      
+      // Create a new board if starting a game, otherwise keep current board
+      const newBoard = isStartingNewGame 
+        ? createEmptyBoard(
+            boardSize?.m || state.boardSize.m, 
+            boardSize?.n || state.boardSize.n
+          ) 
+        : state.board;
+
       return {
         ...state,
-        ...action.payload,
-        board: createEmptyBoard(
-          action.payload.boardSize?.m || state.boardSize.m,
-          action.payload.boardSize?.n || state.boardSize.n
-        ),
+        boardSize: boardSize || state.boardSize,
+        winLength: winLength || state.winLength,
+        gridType: gridType || state.gridType,
+        playerConfigs: playerConfigs || state.playerConfigs,
+        board: newBoard,
+        currentPlayer: 0,
         winner: null,
         isDraw: false,
         winningCells: [],
-        gameStarted: true
+        gameStarted: isStartingNewGame
       };
+    }
       
-    case 'MAKE_MOVE':
-      const { position, fromPosition } = action.payload;
-      const [row, col] = position;
-      const newBoard = state.board.map(r => [...r]);
-      
-      // Handle different move types
-      if (state.moveType === MoveType.PLACE) {
-        // For placement, just place the piece if the cell is empty
-        if (newBoard[row][col] !== null) {
-          return state; // Invalid move, cell is not empty
+    case 'MAKE_MOVE': {
+      try {
+        const { position, fromPosition } = action.payload;
+        const [row, col] = position;
+        
+        // Don't allow moves if game is over
+        if (state.winner !== null || state.isDraw || !state.gameStarted) {
+          return state;
+        }
+
+        // Create an immutable copy of the board
+        const newBoard = deepCopyBoard(state.board);
+        
+        // Handle different move types
+        if (state.moveType === MoveType.PLACE) {
+          // For placement, just place the piece if the cell is empty
+          if (newBoard[row][col] !== null) {
+            return state;
+          }
+          
+          newBoard[row][col] = state.currentPlayer;
+        } else if (state.moveType === MoveType.MOVE && fromPosition) {
+          const [fromRow, fromCol] = fromPosition;
+          
+          // Validate move conditions
+          if (
+            newBoard[row][col] !== null || // Destination must be empty
+            newBoard[fromRow][fromCol] === null || // Source must have a piece
+            newBoard[fromRow][fromCol] === state.currentPlayer // Can't move own pieces
+          ) {
+            return state;
+          }
+          
+          // Move the piece
+          newBoard[row][col] = newBoard[fromRow][fromCol];
+          newBoard[fromRow][fromCol] = null;
+        } else {
+          return state;
         }
         
-        newBoard[row][col] = state.currentPlayer;
-      } else if (state.moveType === MoveType.MOVE && fromPosition) {
-        const [fromRow, fromCol] = fromPosition;
+        // Check for win
+        const winResult = checkWin(
+          newBoard,
+          row,
+          col,
+          state.currentPlayer,
+          state.boardSize,
+          state.winLength,
+          state.gridType
+        );
         
-        // For movement, check if the move is valid
-        if (
-          newBoard[row][col] !== null || // Destination must be empty
-          newBoard[fromRow][fromCol] === null || // Source must have a piece
-          newBoard[fromRow][fromCol] === state.currentPlayer // Can't move own pieces
-        ) {
-          return state; // Invalid move
-        }
+        // Check for draw if no win
+        const isDraw = !winResult.isWin && checkDraw(newBoard);
         
-        // Move the piece
-        newBoard[row][col] = newBoard[fromRow][fromCol];
-        newBoard[fromRow][fromCol] = null;
-      } else {
-        return state; // Invalid move type or missing fromPosition
+        // Move to next player if game continues
+        const nextPlayer = winResult.isWin || isDraw
+          ? state.currentPlayer // Keep current player if game is over
+          : (state.currentPlayer + 1) % state.playerConfigs.length;
+        
+        return {
+          ...state,
+          board: newBoard,
+          currentPlayer: nextPlayer,
+          winner: winResult.isWin ? state.currentPlayer : null,
+          isDraw,
+          winningCells: winResult.winningCells
+        };
+      } catch (error) {
+        console.error('Error in MAKE_MOVE action:', error);
+        return state;
       }
+    }
       
-      // Check for win
-      const winResult = checkWin(
-        newBoard,
-        row,
-        col,
-        state.currentPlayer,
-        state.boardSize,
-        state.winLength,
-        state.gridType
-      );
-      
-      // Check for draw if no win
-      const isDraw = !winResult.isWin && checkDraw(newBoard);
-      
-      // Move to next player if game continues
-      const nextPlayer = winResult.isWin || isDraw
-        ? state.currentPlayer // Keep current player if game is over
-        : (state.currentPlayer + 1) % state.playerConfigs.length;
-      
-      return {
-        ...state,
-        board: newBoard,
-        currentPlayer: nextPlayer,
-        winner: winResult.isWin ? state.currentPlayer : null,
-        isDraw,
-        winningCells: winResult.winningCells
-      };
-      
-    case 'RESET_GAME':
+    case 'RESET_GAME': {
       return {
         ...state,
         board: createEmptyBoard(state.boardSize.m, state.boardSize.n),
@@ -148,18 +185,21 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         winningCells: [],
         gameStarted: true
       };
+    }
       
-    case 'SET_MOVE_TYPE':
+    case 'SET_MOVE_TYPE': {
       return {
         ...state,
         moveType: action.payload
       };
+    }
       
-    case 'SET_PLAYER_CONFIGS':
+    case 'SET_PLAYER_CONFIGS': {
       return {
         ...state,
         playerConfigs: action.payload
       };
+    }
       
     default:
       return state;

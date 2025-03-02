@@ -1,12 +1,9 @@
 import React from 'react';
 import { MoveType, PlayerConfig } from '../../types/game.types';
+import { useGameState } from '../../hooks';
+import { useGame } from '../../context';
 
 interface GameInfoProps {
-  currentPlayer: number;
-  winner: number | null;
-  isDraw: boolean;
-  playerConfigs: PlayerConfig[];
-  onResetGame: (returnToMenu?: boolean) => void;
   currentMoveType?: MoveType;
 }
 
@@ -14,13 +11,12 @@ interface GameInfoProps {
  * Displays game status information and controls
  */
 const GameInfo: React.FC<GameInfoProps> = ({
-  currentPlayer,
-  winner,
-  isDraw,
-  playerConfigs,
-  onResetGame,
   currentMoveType = MoveType.PLACE,
 }) => {
+  const { state } = useGame();
+  const { currentPlayer, winner, isDraw, playerConfigs } = state;
+  const { resetGame, getGameStatus, getWinner } = useGameState();
+  
   // Generate the status message based on game state
   const getStatusMessage = () => {
     if (winner !== null) {
@@ -73,7 +69,7 @@ const GameInfo: React.FC<GameInfoProps> = ({
       {isGameOver && (
         <button 
           className="btn btn-primary" 
-          onClick={() => onResetGame(false)}
+          onClick={() => resetGame(false)}
           aria-label="Play Again"
         >
           Play Again
