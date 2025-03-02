@@ -17,6 +17,7 @@ import {
 } from '../constants';
 import { createEmptyBoard } from '../game/gameUtils';
 import { checkWin, checkDraw } from '../game/win-detection/winConditions';
+import { deepCopyBoard } from '../utils/cellUtils';
 
 // Define the initial game state
 const initialGameState: GameState = {
@@ -44,10 +45,45 @@ type GameAction =
   | { type: 'HANDLE_CELL_CLICK'; payload: { position: CellPosition } };
 
 /**
- * Creates an immutable copy of a 2D array
+ * Helper function to check if the game is in an active state
  */
-const deepCopyBoard = (board: (number | null)[][]): (number | null)[][] => {
-  return board.map(row => [...row]);
+const isGameActive = (state: GameState): boolean => {
+  return state.winner === null && !state.isDraw && state.gameStarted;
+};
+
+/**
+ * Helper function to check if a cell contains an opponent's piece that can be moved
+ */
+const canSelectOpponentPiece = (
+  cellValue: number | null,
+  currentPlayer: number,
+  allowMovingOpponentPieces: boolean
+): boolean => {
+  return cellValue !== null && 
+         cellValue !== currentPlayer && 
+         allowMovingOpponentPieces;
+};
+
+/**
+ * Helper function to create a state with cell deselection
+ */
+const createDeselectState = (state: GameState): GameState => {
+  return {
+    ...state,
+    selectedCell: null,
+    moveType: MoveType.PLACE
+  };
+};
+
+/**
+ * Helper function to create a state with cell selection
+ */
+const createSelectState = (state: GameState, position: CellPosition): GameState => {
+  return {
+    ...state,
+    selectedCell: position,
+    moveType: MoveType.MOVE
+  };
 };
 
 /**
@@ -88,15 +124,13 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       
     case 'RESET_GAME': {
       return {
-        ...state,
+        ...createDeselectState(state),
         board: createEmptyBoard(state.boardSize.m, state.boardSize.n),
         currentPlayer: 0,
         winner: null,
         isDraw: false,
         winningCells: [],
-        gameStarted: true,
-        selectedCell: null,
-        moveType: MoveType.PLACE
+        gameStarted: true
       };
     }
       
@@ -117,18 +151,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'SELECT_CELL': {
       // If null is passed, clear the selection
       if (action.payload === null) {
-        return {
-          ...state,
-          selectedCell: null,
-          moveType: MoveType.PLACE
-        };
+        return createDeselectState(state);
       }
       
       const [row, col] = action.payload;
-      const { board, currentPlayer, winner, isDraw, gameStarted, allowMovingOpponentPieces } = state;
+      const { board, currentPlayer, allowMovingOpponentPieces } = state;
       
       // Don't allow selection if game is over or not started
-      if (winner !== null || isDraw || !gameStarted) {
+      if (!isGameActive(state)) {
         return state;
       }
       
@@ -138,11 +168,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         
         // If clicking on the same cell, deselect it
         if (selectedRow === row && selectedCol === col) {
-          return {
-            ...state,
-            selectedCell: null,
-            moveType: MoveType.PLACE
-          };
+          return createDeselectState(state);
         }
         
         // If clicked on empty cell, we'll let HANDLE_CELL_CLICK handle the actual move
@@ -151,20 +177,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         }
         
         // If clicked on opponent's piece and moving opponent pieces is allowed
-        if (board[row][col] !== null && board[row][col] !== currentPlayer && allowMovingOpponentPieces) {
-          return {
-            ...state,
-            selectedCell: action.payload,
-            moveType: MoveType.MOVE
-          };
+        if (canSelectOpponentPiece(board[row][col], currentPlayer, allowMovingOpponentPieces)) {
+          return createSelectState(state, action.payload);
         }
         
         // Clicked on own piece or other invalid selection, deselect
-        return {
-          ...state,
-          selectedCell: null,
-          moveType: MoveType.PLACE
-        };
+        return createDeselectState(state);
       }
       // No cell selected yet
       else {
@@ -174,12 +192,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         }
         
         // If clicked on opponent's piece and moving opponent pieces is allowed
-        if (board[row][col] !== null && board[row][col] !== currentPlayer && allowMovingOpponentPieces) {
-          return {
-            ...state,
-            selectedCell: action.payload,
-            moveType: MoveType.MOVE
-          };
+        if (canSelectOpponentPiece(board[row][col], currentPlayer, allowMovingOpponentPieces)) {
+          return createSelectState(state, action.payload);
         }
         
         // Clicked on own piece or other invalid selection
@@ -192,7 +206,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const [row, col] = position;
       
       // Don't allow moves if game is over
-      if (state.winner !== null || state.isDraw || !state.gameStarted) {
+      if (!isGameActive(state)) {
         return state;
       }
       
@@ -219,12 +233,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           }
           
           // Check if we're trying to move an opponent's piece
-          const isOpponentPiece = newBoard[fromRow][fromCol] !== state.currentPlayer;
-          
-          // Don't allow moving opponent's pieces if the setting is disabled
-          if (isOpponentPiece && !state.allowMovingOpponentPieces) {
-            return state;
-          }
+          const isOpponentPiece = canSelectOpponentPiece(
+            newBoard[fromRow][fromCol], 
+            state.currentPlayer, 
+            true
+          );
           
           // Keep track of which player's piece is being moved
           pieceOwner = newBoard[fromRow][fromCol];
@@ -257,14 +270,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           : (state.currentPlayer + 1) % state.playerConfigs.length;
         
         return {
-          ...state,
+          ...createDeselectState(state),
           board: newBoard,
           currentPlayer: nextPlayer,
           winner: winResult.isWin ? pieceOwner : null,
           isDraw,
-          winningCells: winResult.winningCells,
-          selectedCell: null,
-          moveType: MoveType.PLACE
+          winningCells: winResult.winningCells
         };
       } 
       // Case 2: Cell has a piece (handle selection)
@@ -275,38 +286,22 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           
           // If clicking on the same cell, deselect it
           if (selectedRow === row && selectedCol === col) {
-            return {
-              ...state,
-              selectedCell: null,
-              moveType: MoveType.PLACE
-            };
+            return createDeselectState(state);
           }
           
           // If clicked on opponent's piece and moving opponent pieces is allowed
-          if (cellContent !== state.currentPlayer && state.allowMovingOpponentPieces) {
-            return {
-              ...state,
-              selectedCell: position,
-              moveType: MoveType.MOVE
-            };
+          if (canSelectOpponentPiece(cellContent, state.currentPlayer, state.allowMovingOpponentPieces)) {
+            return createSelectState(state, position);
           }
           
           // Otherwise deselect
-          return {
-            ...state,
-            selectedCell: null,
-            moveType: MoveType.PLACE
-          };
+          return createDeselectState(state);
         }
         // No cell selected yet, try to select this one
         else {
           // If clicked on opponent's piece and moving opponent pieces is allowed
-          if (cellContent !== state.currentPlayer && state.allowMovingOpponentPieces) {
-            return {
-              ...state,
-              selectedCell: position,
-              moveType: MoveType.MOVE
-            };
+          if (canSelectOpponentPiece(cellContent, state.currentPlayer, state.allowMovingOpponentPieces)) {
+            return createSelectState(state, position);
           }
           
           // If trying to select player's own piece (which we don't currently support)

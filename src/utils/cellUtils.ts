@@ -51,4 +51,14 @@ export const getCellStyles = (
     borderRadius: '0',
     overflow: 'hidden', // Ensure content doesn't overflow
   };
+};
+
+/**
+ * Creates an immutable copy of a 2D array
+ * 
+ * @param board The board to copy
+ * @returns A deep copy of the board
+ */
+export const deepCopyBoard = <T>(board: T[][]): T[][] => {
+  return board.map(row => [...row]);
 }; 
