@@ -2,7 +2,7 @@
   "name": "mnk-game",
   "version": "1.0.0",
   "description": "A web-based implementation of the m,n,k game",
-  "homepage": "https://maxliu.me/mnk-game",
+  "homepage": "https://maxliu.me/mnk-game/",
   "main": "index.js",
   "scripts": {
     "start": "vite",
