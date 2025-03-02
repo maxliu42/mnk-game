@@ -9,36 +9,19 @@ import { BoardSize } from '../types/game.types';
  * Default board size
  */
 export const DEFAULT_BOARD_SIZE = {
-  m: 15,  // rows
-  n: 15   // columns
+  m: 3,  // rows
+  n: 3   // columns
 };
 
 /**
  * Default win length (number of pieces in a row to win)
  */
-export const DEFAULT_WIN_LENGTH = 5;
+export const DEFAULT_WIN_LENGTH = 3;
 
 /**
  * Maximum number of players
  */
-export const MAX_PLAYERS = 6;
-
-/**
- * Default player symbols
- */
-export const DEFAULT_PLAYER_SYMBOLS = ['X', 'O', '△', '□', '◇', '♡'];
-
-/**
- * Default player colors
- */
-export const DEFAULT_PLAYER_COLORS = [
-  '#FF5252', // Red
-  '#4CAF50', // Green
-  '#2196F3', // Blue
-  '#FFC107', // Amber
-  '#9C27B0', // Purple
-  '#FF9800'  // Orange
-];
+export const MAX_PLAYERS = 8;
 
 /**
  * Default player configurations
@@ -59,13 +42,13 @@ export const DEFAULT_PLAYER_CONFIGS = [
  */
 export const GAME_PRESETS = [
   {
-    name: 'Classic Tic-Tac-Toe',
+    name: 'Tic-Tac-Toe',
     boardSize: { m: 3, n: 3 },
     winLength: 3,
     playerCount: 2
   },
   {
-    name: 'Gomoku (Five in a Row)',
+    name: 'Gomoku',
     boardSize: { m: 15, n: 15 },
     winLength: 5,
     playerCount: 2
@@ -76,10 +59,4 @@ export const GAME_PRESETS = [
     winLength: 4,
     playerCount: 2
   },
-  {
-    name: 'Three Players (5 in a row)',
-    boardSize: { m: 15, n: 15 },
-    winLength: 5,
-    playerCount: 3
-  }
 ]; 

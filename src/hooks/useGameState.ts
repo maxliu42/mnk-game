@@ -6,8 +6,7 @@
  */
 import { useCallback } from 'react';
 import { useGame } from '../context';
-import type { GameState } from '../context/GameContext';
-import { GameConfig, PlayerConfig, BoardSize } from '../types/game.types';
+import { GameConfig, PlayerConfig, BoardSize, GameState } from '../types/game.types';
 import { DEFAULT_PLAYER_CONFIGS } from '../constants';
 
 /**
@@ -20,12 +19,8 @@ interface GameStateHook {
   resetGame: (returnToMenu?: boolean) => void;
   /** Check if the game is currently active */
   isGameActive: () => boolean;
-  /** Get the current player's name */
-  getCurrentPlayerName: () => string;
-  /** Get the current player's symbol */
-  getCurrentPlayerSymbol: () => string;
-  /** Get the current player's color */
-  getCurrentPlayerColor: () => string;
+  /** Get the current player attribute (name, symbol, color) */
+  getCurrentPlayerAttribute: <K extends keyof PlayerConfig>(attribute: K) => PlayerConfig[K];
   /** Set the player configurations */
   setPlayerConfigs: (configs: PlayerConfig[]) => void;
   /** Get the current game status (active, win, draw) */
@@ -77,32 +72,39 @@ export const useGameState = (): GameStateHook => {
   }, [dispatch]);
   
   /**
+   * Get the current game status
+   */
+  const getGameStatus = useCallback((): 'active' | 'win' | 'draw' => {
+    if (state.winner !== null) return 'win';
+    if (state.isDraw) return 'draw';
+    return 'active';
+  }, [state.winner, state.isDraw]);
+  
+  /**
    * Check if the game is currently active
    */
   const isGameActive = useCallback(() => {
-    const { gameStarted, winner, isDraw } = state;
-    return gameStarted && winner === null && !isDraw;
-  }, [state]);
+    return getGameStatus() === 'active' && state.gameStarted;
+  }, [getGameStatus, state.gameStarted]);
   
   /**
-   * Get the current player's name
+   * Get the specified attribute of the current player
    */
-  const getCurrentPlayerName = useCallback(() => {
-    return state.playerConfigs[state.currentPlayer]?.name || `Player ${state.currentPlayer + 1}`;
-  }, [state.currentPlayer, state.playerConfigs]);
-  
-  /**
-   * Get the current player's symbol
-   */
-  const getCurrentPlayerSymbol = useCallback(() => {
-    return state.playerConfigs[state.currentPlayer]?.symbol || `P${state.currentPlayer + 1}`;
-  }, [state.currentPlayer, state.playerConfigs]);
-  
-  /**
-   * Get the current player's color
-   */
-  const getCurrentPlayerColor = useCallback(() => {
-    return state.playerConfigs[state.currentPlayer]?.color || `#000000`;
+  const getCurrentPlayerAttribute = useCallback(<K extends keyof PlayerConfig>(attribute: K): PlayerConfig[K] => {
+    const { currentPlayer, playerConfigs } = state;
+    const playerConfig = playerConfigs[currentPlayer];
+    
+    if (!playerConfig) {
+      // Fallback values based on attribute type
+      const fallbacks: Record<keyof PlayerConfig, any> = {
+        name: `Player ${currentPlayer + 1}`,
+        symbol: `P${currentPlayer + 1}`,
+        color: '#000000'
+      };
+      return fallbacks[attribute] as PlayerConfig[K];
+    }
+    
+    return playerConfig[attribute];
   }, [state.currentPlayer, state.playerConfigs]);
   
   /**
@@ -116,15 +118,6 @@ export const useGameState = (): GameStateHook => {
   }, [dispatch]);
   
   /**
-   * Get the current game status
-   */
-  const getGameStatus = useCallback((): 'active' | 'win' | 'draw' => {
-    if (state.winner !== null) return 'win';
-    if (state.isDraw) return 'draw';
-    return 'active';
-  }, [state.winner, state.isDraw]);
-  
-  /**
    * Get the winner's configuration if there is a winner
    */
   const getWinner = useCallback((): PlayerConfig | null => {
@@ -136,9 +129,7 @@ export const useGameState = (): GameStateHook => {
     startGame,
     resetGame,
     isGameActive,
-    getCurrentPlayerName,
-    getCurrentPlayerSymbol,
-    getCurrentPlayerColor,
+    getCurrentPlayerAttribute,
     setPlayerConfigs,
     getGameStatus,
     getWinner

@@ -4,4 +4,5 @@
  */
 
 export { default as useGameBoard } from './useGameBoard';
-export { default as useGameState } from './useGameState'; 
+export { default as useGameState } from './useGameState';
+export { default as useBoardRendering } from './useBoardRendering'; 

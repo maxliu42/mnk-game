@@ -14,13 +14,13 @@ const GameInfo: React.FC<GameInfoProps> = ({
   currentMoveType = MoveType.PLACE,
 }) => {
   const { state } = useGame();
-  const { currentPlayer, winner, isDraw, playerConfigs } = state;
-  const { resetGame, getGameStatus, getWinner } = useGameState();
+  const { winner, isDraw } = state;
+  const { resetGame, getGameStatus, getWinner, getCurrentPlayerAttribute } = useGameState();
   
   // Generate the status message based on game state
   const getStatusMessage = () => {
     if (winner !== null) {
-      const winnerConfig = playerConfigs[winner];
+      const winnerConfig = getWinner()!;
       return (
         <>
           <span 
@@ -38,7 +38,10 @@ const GameInfo: React.FC<GameInfoProps> = ({
       return 'Game ended in a draw!';
     }
     
-    const currentConfig = playerConfigs[currentPlayer];
+    const currentPlayerName = getCurrentPlayerAttribute('name');
+    const currentPlayerSymbol = getCurrentPlayerAttribute('symbol');
+    const currentPlayerColor = getCurrentPlayerAttribute('color');
+    
     const moveTypeText = currentMoveType === MoveType.PLACE 
       ? 'placing a stone' 
       : 'moving an opponent\'s stone';
@@ -48,13 +51,13 @@ const GameInfo: React.FC<GameInfoProps> = ({
         <span className="current-player-indicator">
           <span 
             className="player-symbol" 
-            style={{ color: currentConfig.color }}
+            style={{ color: currentPlayerColor }}
           >
-            {currentConfig.symbol}
+            {currentPlayerSymbol}
           </span>
         </span>
         <span>
-          {currentConfig.name}'s turn - {moveTypeText}
+          {currentPlayerName}'s turn - {moveTypeText}
         </span>
       </>
     );

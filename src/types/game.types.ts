@@ -40,12 +40,17 @@ export interface GameMove {
 export interface GameState {
   board: (number | null)[][];
   currentPlayer: number;
+  playerConfigs: PlayerConfig[];
+  boardSize: BoardSize;
+  winLength: number;
+  moveType: MoveType;
   winner: number | null;
   isDraw: boolean;
   winningCells: CellPosition[];
+  gameStarted: boolean;
+  allowMovingOpponentPieces: boolean;
   selectedCell: CellPosition | null;
-  currentMoveType: MoveType;
-  moveHistory: GameMove[];
+  moveHistory?: GameMove[]; // Optional for backward compatibility
 }
 
 /**

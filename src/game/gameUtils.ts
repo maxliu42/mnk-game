@@ -45,36 +45,4 @@ export const createEmptyBoard = (m: number, n: number): (number | null)[][] => {
   return Array(m)
     .fill(null)
     .map(() => Array(n).fill(null));
-};
-
-/**
- * Checks if a move is valid
- */
-export const isValidMove = (
-  board: (number | null)[][],
-  position: CellPosition,
-  moveType: MoveType,
-  currentPlayer: number,
-  fromPosition?: CellPosition
-): boolean => {
-  const [row, col] = position;
-  
-  if (moveType === MoveType.PLACE) {
-    // For placement, the cell must be empty
-    return board[row][col] === null;
-  } else if (moveType === MoveType.MOVE && fromPosition) {
-    const [fromRow, fromCol] = fromPosition;
-    
-    // For moving a piece, the destination must be empty
-    // The source must contain an opponent's piece
-    // Note: We're not checking if the move is "valid" in terms of distance/pattern
-    // That would depend on specific game rules
-    return (
-      board[row][col] === null && 
-      board[fromRow][fromCol] !== null && 
-      board[fromRow][fromCol] !== currentPlayer
-    );
-  }
-  
-  return false;
 }; 

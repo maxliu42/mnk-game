@@ -5,34 +5,37 @@ import { BoardSize, CellPosition, WinCheckResult } from '../../types/game.types'
 import { isValidPosition, DIRECTIONS } from '../gameUtils';
 
 /**
- * Counts consecutive pieces in a direction
+ * Counts consecutive pieces in both directions along an axis
  */
-const countConsecutivePieces = (
+const countAlongAxis = (
   board: (number | null)[][],
-  startRow: number,
-  startCol: number,
+  row: number,
+  col: number,
   dirX: number,
   dirY: number,
   player: number,
   boardSize: BoardSize
 ): { count: number; cells: CellPosition[] } => {
-  let count = 0;
-  const cells: CellPosition[] = [];
+  const cells: CellPosition[] = [[row, col]]; // Start with the center cell
+  let count = 1; // Start with 1 for the center cell
   
-  // Check consecutive cells in this direction
-  for (let i = 0; i < Math.max(boardSize.m, boardSize.n); i++) {
-    const newRow = startRow + dirX * i;
-    const newCol = startCol + dirY * i;
-    
-    // Check if cell is within bounds and has the player's symbol
-    if (
-      isValidPosition(newRow, newCol, boardSize) &&
-      board[newRow][newCol] === player
-    ) {
-      count++;
-      cells.push([newRow, newCol]);
-    } else {
-      break;
+  // Check in both positive and negative directions
+  for (const multiplier of [1, -1]) {
+    // Check consecutive cells in this direction
+    for (let step = 1; step < Math.max(boardSize.m, boardSize.n); step++) {
+      const newRow = row + (dirX * multiplier * step);
+      const newCol = col + (dirY * multiplier * step);
+      
+      // Check if cell is within bounds and has the player's symbol
+      if (
+        isValidPosition(newRow, newCol, boardSize) &&
+        board[newRow][newCol] === player
+      ) {
+        count++;
+        cells.push([newRow, newCol]);
+      } else {
+        break; // Stop checking this direction when we hit a boundary or different player
+      }
     }
   }
   
@@ -50,31 +53,12 @@ export const checkWin = (
   boardSize: BoardSize,
   winLength: number
 ): WinCheckResult => {
-  // Check each direction for winning sequence
+  // Check each of the four directions for a winning sequence
   for (const [dx, dy] of DIRECTIONS) {
-    // Check in positive direction (including the current cell)
-    const { count: forwardCount, cells: forwardCells } = countConsecutivePieces(
-      board, row, col, dx, dy, player, boardSize
-    );
+    const { count, cells } = countAlongAxis(board, row, col, dx, dy, player, boardSize);
     
-    // Check in negative direction (excluding the current cell to avoid counting it twice)
-    const { count: backwardCount, cells: backwardCells } = countConsecutivePieces(
-      board, row + (-dx), col + (-dy), -dx, -dy, player, boardSize
-    );
-    
-    // Total count (forwardCount already includes the current cell)
-    const totalCount = forwardCount + backwardCount;
-    
-    // If we found enough cells in a row, it's a win
-    if (totalCount >= winLength) {
-      // Combine cells from both directions
-      const allCells = [...forwardCells, ...backwardCells];
-      // Remove duplicate cells if any
-      const uniqueCells = allCells.filter((cell, index, self) => 
-        self.findIndex(c => c[0] === cell[0] && c[1] === cell[1]) === index
-      );
-      
-      return { isWin: true, winningCells: uniqueCells };
+    if (count >= winLength) {
+      return { isWin: true, winningCells: cells };
     }
   }
   

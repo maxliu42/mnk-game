@@ -1,4 +1,5 @@
 import React from 'react';
+import { getCellClassNames, getCellStyles } from '../../utils';
 
 interface BoardCellProps {
   cell: number | null;
@@ -12,44 +13,6 @@ interface BoardCellProps {
   onClick: () => void;
 }
 
-// Helper function to generate cell class names
-const getCellClassNames = (
-  cell: number | null,
-  isWinning: boolean,
-  isSelected: boolean
-): string => {
-  let cellClassName = 'cell';
-  
-  if (cell !== null) {
-    cellClassName += ` player${cell + 1}`;
-  }
-  if (isWinning) {
-    cellClassName += ' winning-line';
-  }
-  if (isSelected) {
-    cellClassName += ' selected';
-  }
-  
-  return cellClassName;
-};
-
-// Helper function to generate cell styles
-const getCellStyles = (
-  optimalCellSize: string
-): React.CSSProperties => {
-  return {
-    aspectRatio: '1 / 1',
-    padding: 0,
-    width: optimalCellSize,
-    height: optimalCellSize,
-    maxWidth: optimalCellSize,
-    maxHeight: optimalCellSize,
-    margin: '0',
-    borderRadius: '0',
-    overflow: 'hidden', // Ensure content doesn't overflow
-  };
-};
-
 const BoardCell: React.FC<BoardCellProps> = ({
   cell,
   row,
@@ -61,10 +24,10 @@ const BoardCell: React.FC<BoardCellProps> = ({
   playerSymbols,
   onClick
 }) => {
-  // Build class names for the cell using the helper function
+  // Build class names for the cell using the utility function
   const cellClassName = getCellClassNames(cell, isWinning, isSelected);
   
-  // Generate cell styles based on the cell size
+  // Generate cell styles based on the cell size using the utility function
   const cellStyle = getCellStyles(optimalCellSize);
   
   return (
