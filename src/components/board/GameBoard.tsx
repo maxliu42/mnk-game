@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { CellPosition } from '../../types/game.types';
 import BoardCell from './BoardCell';
 
@@ -49,25 +49,26 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const optimalCellSize = `${BASE_CELL_SIZES[boardSizeClass as keyof typeof BASE_CELL_SIZES]}px`;
 
   // Check if a cell is part of the winning line
-  const isWinningCell = (row: number, col: number) => {
+  const isWinningCell = useCallback((row: number, col: number) => {
     return winningCells.some(
       ([winRow, winCol]) => winRow === row && winCol === col
     );
-  };
+  }, [winningCells]);
 
   // Check if a cell is currently selected
-  const isCellSelected = (row: number, col: number) => {
+  const isCellSelected = useCallback((row: number, col: number) => {
     return selectedCell ? selectedCell[0] === row && selectedCell[1] === col : false;
-  };
+  }, [selectedCell]);
 
   // Determine grid wrapper classes and styles
-  const gridClassName = `game-board ${boardSizeClass} square-grid`;
-  const gridStyle = {
+  const gridClassName = useMemo(() => `game-board ${boardSizeClass} square-grid`, [boardSizeClass]);
+  
+  const gridStyle = useMemo(() => ({
     display: 'grid',
     gridTemplateColumns: `repeat(${colCount}, 1fr)`,
     gridTemplateRows: `repeat(${rowCount}, 1fr)`,
     gap: '0',
-  };
+  }), [rowCount, colCount]);
 
   return (
     <div

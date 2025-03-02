@@ -85,4 +85,5 @@ const BoardCell: React.FC<BoardCellProps> = ({
   );
 };
 
-export default BoardCell; 
+// Memoize the component to prevent unnecessary re-renders
+export default React.memo(BoardCell); 

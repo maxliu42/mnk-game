@@ -2,7 +2,7 @@
  * Game Context
  * This module provides a React context for managing game state
  */
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useMemo } from 'react';
 import { 
   BoardSize, 
   MoveType, 
@@ -110,6 +110,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         // Create an immutable copy of the board
         const newBoard = deepCopyBoard(state.board);
         
+        // Keep track of which player's piece is being placed/moved
+        let pieceOwner = state.currentPlayer;
+        
         // Handle different move types
         if (state.moveType === MoveType.PLACE) {
           // For placement, just place the piece if the cell is empty
@@ -130,19 +133,22 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             return state;
           }
           
+          // Keep track of which player's piece is being moved
+          pieceOwner = newBoard[fromRow][fromCol];
+          
           // Move the piece
-          newBoard[row][col] = newBoard[fromRow][fromCol];
+          newBoard[row][col] = pieceOwner;
           newBoard[fromRow][fromCol] = null;
         } else {
           return state;
         }
         
-        // Check for win
+        // Check for win - use the piece owner for the check, not necessarily the current player
         const winResult = checkWin(
           newBoard,
           row,
           col,
-          state.currentPlayer,
+          pieceOwner, // Use piece owner instead of currentPlayer
           state.boardSize,
           state.winLength
         );
@@ -159,7 +165,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           ...state,
           board: newBoard,
           currentPlayer: nextPlayer,
-          winner: winResult.isWin ? state.currentPlayer : null,
+          winner: winResult.isWin ? pieceOwner : null, // Set the winner as the piece owner
           isDraw,
           winningCells: winResult.winningCells
         };
@@ -216,8 +222,14 @@ interface GameProviderProps {
 export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialGameState);
   
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    state,
+    dispatch
+  }), [state]);
+  
   return (
-    <GameContext.Provider value={{ state, dispatch }}>
+    <GameContext.Provider value={contextValue}>
       {children}
     </GameContext.Provider>
   );
