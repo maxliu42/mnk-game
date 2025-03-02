@@ -6,7 +6,7 @@
  */
 import { useCallback } from 'react';
 import { useGame } from '../context';
-import { GameConfig, GridType, PlayerConfig, BoardSize } from '../types/game.types';
+import { GameConfig, PlayerConfig, BoardSize } from '../types/game.types';
 import { DEFAULT_PLAYER_CONFIGS } from '../constants';
 
 /**
@@ -50,7 +50,6 @@ export const useGameState = (): GameStateHook => {
       payload: {
         boardSize: config?.boardSize || { m, n },
         winLength: config?.winLength || k,
-        gridType: config?.gridType || GridType.SQUARE,
         playerConfigs: config?.playerConfigs || DEFAULT_PLAYER_CONFIGS.slice(0, config?.playerCount || 2),
         gameStarted: true
       }

@@ -1,27 +1,17 @@
 /**
  * Game utility functions for the m,n,k-game
  */
-import { BoardSize, CellPosition, GridType, MoveType, WinCheckResult } from '../types/game.types';
+import { BoardSize, CellPosition, MoveType, WinCheckResult } from '../types/game.types';
 
 /**
- * Direction vectors for different grid types
+ * Direction vectors for square grid
  */
-const DIRECTIONS = {
-  [GridType.SQUARE]: [
-    [0, 1],   // horizontal
-    [1, 0],   // vertical
-    [1, 1],   // diagonal down-right
-    [1, -1],  // diagonal down-left
-  ],
-  [GridType.HEX]: [
-    [1, 0],    // down
-    [0, 1],    // right
-    [-1, 1],   // up-right
-    [1, -1],   // down-left
-    [-1, 0],   // up
-    [0, -1],   // left
-  ]
-};
+const DIRECTIONS = [
+  [0, 1],   // horizontal
+  [1, 0],   // vertical
+  [1, 1],   // diagonal down-right
+  [1, -1],  // diagonal down-left
+];
 
 /**
  * Checks if a position is valid on the board
@@ -35,17 +25,15 @@ export const isValidPosition = (
 };
 
 /**
- * Gets all valid neighboring positions for a cell based on grid type
+ * Gets all valid neighboring positions for a cell
  */
 export const getNeighbors = (
   position: CellPosition,
-  boardSize: BoardSize,
-  gridType: GridType = GridType.SQUARE
+  boardSize: BoardSize
 ): CellPosition[] => {
   const [row, col] = position;
-  const directions = DIRECTIONS[gridType];
   
-  return directions
+  return DIRECTIONS
     .map(([dr, dc]) => [row + dr, col + dc] as CellPosition)
     .filter(([r, c]) => isValidPosition(r, c, boardSize));
 };
@@ -94,12 +82,9 @@ export const checkWin = (
   col: number,
   player: number,
   boardSize: BoardSize,
-  winLength: number,
-  gridType: GridType = GridType.SQUARE
+  winLength: number
 ): WinCheckResult => {
-  const directions = DIRECTIONS[gridType];
-  
-  for (const [dx, dy] of directions) {
+  for (const [dx, dy] of DIRECTIONS) {
     // Check in positive direction (including the current cell)
     const { count: forwardCount, cells: forwardCells } = countConsecutivePieces(
       board, row, col, dx, dy, player, boardSize

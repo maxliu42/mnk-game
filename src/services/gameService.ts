@@ -3,7 +3,7 @@
  * This module provides services for game operations like saving/loading games
  */
 
-import { BoardSize, GridType, PlayerConfig } from '../types/game.types';
+import { BoardSize, PlayerConfig } from '../types/game.types';
 
 /**
  * Interface for saved game data
@@ -17,7 +17,6 @@ interface SavedGame {
   playerConfigs: PlayerConfig[];
   boardSize: BoardSize;
   winLength: number;
-  gridType: GridType;
 }
 
 /**

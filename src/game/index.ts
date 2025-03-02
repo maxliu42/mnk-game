@@ -6,8 +6,5 @@
 // Export game utilities
 export * from './gameUtils';
 
-// Export grid implementations
-export * from './grid';
-
 // Export win detection
 export * from './win-detection'; 

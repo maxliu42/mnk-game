@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { GameConfig, GridType, PlayerConfig as PlayerConfigType } from '../../types/game.types';
+import { GameConfig, PlayerConfig as PlayerConfigType } from '../../types/game.types';
 import { EmojiClickData } from 'emoji-picker-react';
 import PlayerConfig from './PlayerConfig';
 import { GAME_PRESETS } from '../../constants';
@@ -103,7 +103,6 @@ const GameControls: React.FC<GameControlsProps> = ({ defaultPlayerConfigs }) => 
     const config: GameConfig = {
       boardSize: { m, n },
       winLength: k,
-      gridType: GridType.SQUARE, // Default to square grid for now
       allowMovingOpponentPieces,
       playerCount,
       playerConfigs

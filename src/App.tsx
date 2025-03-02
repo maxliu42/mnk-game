@@ -4,7 +4,7 @@ import { GameControls } from "./components/controls";
 import { GameInfo } from "./components/info";
 import { GameProvider, useGame } from "./context";
 import { useGameBoard, useGameState } from "./hooks";
-import { GridType, GameConfig, PlayerConfig } from "./types/game.types";
+import { GameConfig, PlayerConfig } from "./types/game.types";
 import { DEFAULT_PLAYER_CONFIGS } from "./constants";
 
 // GameContent component that uses the context
@@ -20,7 +20,6 @@ const GameContent: React.FC = () => {
     gameStarted,
     boardSize,
     winLength,
-    gridType,
     moveType
   } = state;
 
@@ -89,7 +88,6 @@ const GameContent: React.FC = () => {
               onCellClick={handleBoardCellClick}
               winningCells={winningCells}
               selectedCell={selectedCell}
-              gridType={gridType}
               playerSymbols={playerConfigs.map(config => config.symbol)}
             />
           </div>

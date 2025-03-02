@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { CellPosition, GridType } from '../../types/game.types';
+import { CellPosition } from '../../types/game.types';
 import BoardCell from './BoardCell';
 
 // Cell size in pixels for different board size categories
@@ -15,7 +15,6 @@ interface GameBoardProps {
   onCellClick: (row: number, col: number) => void;
   winningCells: CellPosition[];
   selectedCell: CellPosition | null;
-  gridType?: GridType;
   playerSymbols: string[];
 }
 
@@ -24,7 +23,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   onCellClick,
   winningCells,
   selectedCell,
-  gridType = GridType.SQUARE,
   playerSymbols,
 }) => {
   // Get board dimensions
@@ -62,13 +60,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     return selectedCell ? selectedCell[0] === row && selectedCell[1] === col : false;
   };
 
-  // Determine grid wrapper classes and styles based on grid type
-  const gridClassName = `game-board ${boardSizeClass} ${gridType === GridType.HEX ? 'hex-grid' : 'square-grid'}`;
+  // Determine grid wrapper classes and styles
+  const gridClassName = `game-board ${boardSizeClass} square-grid`;
   const gridStyle = {
     display: 'grid',
     gridTemplateColumns: `repeat(${colCount}, 1fr)`,
     gridTemplateRows: `repeat(${rowCount}, 1fr)`,
-    gap: gridType === GridType.SQUARE ? '0' : '2px', // Adjust for hex grid
+    gap: '0',
   };
 
   return (
@@ -87,7 +85,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             isSelected={isCellSelected(rowIndex, colIndex)}
             symbolSizeClass={symbolSizeClass}
             optimalCellSize={optimalCellSize}
-            gridType={gridType}
             playerSymbols={playerSymbols}
             onClick={() => onCellClick(rowIndex, colIndex)}
           />

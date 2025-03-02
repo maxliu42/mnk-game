@@ -1,8 +1,17 @@
 /**
  * Core utility functions for the m,n,k-game
  */
-import { BoardSize, CellPosition, GridType, MoveType } from '../types/game.types';
-import { getGridImplementation } from './grid';
+import { BoardSize, CellPosition, MoveType } from '../types/game.types';
+
+/**
+ * Direction vectors for win checking and neighbor detection
+ */
+export const DIRECTIONS = [
+  [0, 1],   // horizontal
+  [1, 0],   // vertical
+  [1, 1],   // diagonal down-right
+  [1, -1],  // diagonal down-left
+];
 
 /**
  * Checks if a position is valid on the board
@@ -16,18 +25,15 @@ export const isValidPosition = (
 };
 
 /**
- * Gets all valid neighboring positions for a cell based on grid type
+ * Gets all valid neighboring positions for a cell
  */
 export const getNeighbors = (
   position: CellPosition,
-  boardSize: BoardSize,
-  gridType: GridType = GridType.SQUARE
+  boardSize: BoardSize
 ): CellPosition[] => {
   const [row, col] = position;
-  const gridImpl = getGridImplementation(gridType);
-  const directions = gridImpl.DIRECTIONS;
   
-  return directions
+  return DIRECTIONS
     .map(([dr, dc]) => [row + dr, col + dc] as CellPosition)
     .filter(([r, c]) => isValidPosition(r, c, boardSize));
 };

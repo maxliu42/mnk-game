@@ -5,14 +5,12 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { 
   BoardSize, 
-  GridType, 
   MoveType, 
   PlayerConfig, 
   CellPosition 
 } from '../types/game.types';
 import { 
   DEFAULT_BOARD_SIZE, 
-  DEFAULT_GRID_TYPE, 
   DEFAULT_WIN_LENGTH,
   DEFAULT_PLAYER_SYMBOLS,
   DEFAULT_PLAYER_COLORS
@@ -27,7 +25,6 @@ interface GameState {
   playerConfigs: PlayerConfig[];
   boardSize: BoardSize;
   winLength: number;
-  gridType: GridType;
   moveType: MoveType;
   winner: number | null;
   isDraw: boolean;
@@ -45,7 +42,6 @@ const initialGameState: GameState = {
   ],
   boardSize: DEFAULT_BOARD_SIZE,
   winLength: DEFAULT_WIN_LENGTH,
-  gridType: DEFAULT_GRID_TYPE,
   moveType: MoveType.PLACE,
   winner: null,
   isDraw: false,
@@ -74,7 +70,7 @@ const deepCopyBoard = (board: (number | null)[][]): (number | null)[][] => {
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
     case 'START_GAME': {
-      const { boardSize, winLength, gridType, playerConfigs, gameStarted } = action.payload;
+      const { boardSize, winLength, playerConfigs, gameStarted } = action.payload;
       
       // Determine if we're starting a new game or just updating settings
       const isStartingNewGame = gameStarted !== undefined ? gameStarted : true;
@@ -91,7 +87,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...state,
         boardSize: boardSize || state.boardSize,
         winLength: winLength || state.winLength,
-        gridType: gridType || state.gridType,
         playerConfigs: playerConfigs || state.playerConfigs,
         board: newBoard,
         currentPlayer: 0,
@@ -149,8 +144,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           col,
           state.currentPlayer,
           state.boardSize,
-          state.winLength,
-          state.gridType
+          state.winLength
         );
         
         // Check for draw if no win

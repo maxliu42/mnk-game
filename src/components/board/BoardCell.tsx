@@ -1,5 +1,4 @@
 import React from 'react';
-import { GridType } from '../../types/game.types';
 
 interface BoardCellProps {
   cell: number | null;
@@ -9,7 +8,6 @@ interface BoardCellProps {
   isSelected: boolean;
   symbolSizeClass: string;
   optimalCellSize: string;
-  gridType: GridType;
   playerSymbols: string[];
   onClick: () => void;
 }
@@ -17,15 +15,11 @@ interface BoardCellProps {
 // Helper function to generate cell class names
 const getCellClassNames = (
   cell: number | null,
-  gridType: GridType,
   isWinning: boolean,
   isSelected: boolean
 ): string => {
   let cellClassName = 'cell';
   
-  if (gridType === GridType.HEX) {
-    cellClassName += ' hex-cell';
-  }
   if (cell !== null) {
     cellClassName += ` player${cell + 1}`;
   }
@@ -41,11 +35,10 @@ const getCellClassNames = (
 
 // Helper function to generate cell styles
 const getCellStyles = (
-  gridType: GridType,
   optimalCellSize: string
 ): React.CSSProperties => {
   return {
-    aspectRatio: gridType === GridType.SQUARE ? '1 / 1' : 'auto',
+    aspectRatio: '1 / 1',
     padding: 0,
     width: optimalCellSize,
     height: optimalCellSize,
@@ -65,15 +58,14 @@ const BoardCell: React.FC<BoardCellProps> = ({
   isSelected,
   symbolSizeClass,
   optimalCellSize,
-  gridType,
   playerSymbols,
   onClick
 }) => {
   // Build class names for the cell using the helper function
-  const cellClassName = getCellClassNames(cell, gridType, isWinning, isSelected);
+  const cellClassName = getCellClassNames(cell, isWinning, isSelected);
   
-  // Generate cell styles based on grid type
-  const cellStyle = getCellStyles(gridType, optimalCellSize);
+  // Generate cell styles based on the cell size
+  const cellStyle = getCellStyles(optimalCellSize);
   
   return (
     <button

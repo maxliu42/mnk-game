@@ -49,14 +49,6 @@ export interface GameState {
 }
 
 /**
- * Grid type for the game board
- */
-export enum GridType {
-  SQUARE = 'square',
-  HEX = 'hex'
-}
-
-/**
  * Represents an individual player's configuration
  */
 export interface PlayerConfig {
@@ -71,7 +63,6 @@ export interface PlayerConfig {
 export interface GameConfig {
   boardSize: BoardSize;
   winLength: number;
-  gridType: GridType;
   allowMovingOpponentPieces: boolean;
   playerCount: number; // Number of players (2-6)
   playerConfigs?: PlayerConfig[]; // Optional player configurations

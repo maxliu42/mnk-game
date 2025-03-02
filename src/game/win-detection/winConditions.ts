@@ -1,9 +1,8 @@
 /**
  * Win detection logic for m,n,k-game
  */
-import { BoardSize, CellPosition, GridType, WinCheckResult } from '../../types/game.types';
-import { isValidPosition } from '../gameUtils';
-import { getGridImplementation } from '../grid';
+import { BoardSize, CellPosition, WinCheckResult } from '../../types/game.types';
+import { isValidPosition, DIRECTIONS } from '../gameUtils';
 
 /**
  * Counts consecutive pieces in a direction
@@ -49,14 +48,10 @@ export const checkWin = (
   col: number,
   player: number,
   boardSize: BoardSize,
-  winLength: number,
-  gridType: GridType = GridType.SQUARE
+  winLength: number
 ): WinCheckResult => {
-  // Get the appropriate grid implementation based on the grid type
-  const gridImpl = getGridImplementation(gridType);
-  const directions = gridImpl.DIRECTIONS;
-  
-  for (const [dx, dy] of directions) {
+  // Check each direction for winning sequence
+  for (const [dx, dy] of DIRECTIONS) {
     // Check in positive direction (including the current cell)
     const { count: forwardCount, cells: forwardCells } = countConsecutivePieces(
       board, row, col, dx, dy, player, boardSize
