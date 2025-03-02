@@ -4,7 +4,7 @@
  * This hook provides functionality for interacting with the game board,
  * including handling cell clicks, selections, and game piece movements.
  */
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { CellPosition, MoveType } from '../types/game.types';
 import { useGame } from '../context';
 
@@ -27,73 +27,53 @@ interface GameBoardHook {
  */
 export const useGameBoard = (): GameBoardHook => {
   const { state, dispatch } = useGame();
-  const [selectedCell, setSelectedCell] = useState<CellPosition | null>(null);
   
   /**
-   * Handle cell click based on current game state and move type
+   * Handle cell click based on current game state
+   * This is now simplified to delegate all game logic to the reducer
    */
   const handleCellClick = useCallback((position: CellPosition) => {
-    const { board, currentPlayer, winner, isDraw, gameStarted } = state;
-    
-    // Don't allow moves if the game is over or not started
-    if (winner !== null || isDraw || !gameStarted) {
-      return;
-    }
-    
+    const { board, selectedCell } = state;
     const [row, col] = position;
     
-    // If a cell is already selected, we're in move mode
-    if (selectedCell) {
-      // If clicked on an empty cell, move the piece there
-      if (board[row][col] === null) {
+    // If cell is empty
+    if (board[row][col] === null) {
+      // If there's a selected cell, try to move from selected to this empty cell
+      if (selectedCell) {
         dispatch({
           type: 'MAKE_MOVE',
           payload: { position, fromPosition: selectedCell }
         });
-        setSelectedCell(null);
-        // Reset back to placement mode after moving
-        dispatch({ type: 'SET_MOVE_TYPE', payload: MoveType.PLACE });
       } 
-      // If clicked on another opponent's piece, select that instead
-      else if (board[row][col] !== null && board[row][col] !== currentPlayer) {
-        setSelectedCell(position);
-      } 
-      // If clicked on own piece or same piece, deselect
+      // Otherwise make a normal placement move
       else {
-        setSelectedCell(null);
-        // Reset back to placement mode
-        dispatch({ type: 'SET_MOVE_TYPE', payload: MoveType.PLACE });
-      }
-    }
-    // No cell selected, default behavior
-    else {
-      // If clicked on an opponent's piece, select it for movement
-      if (board[row][col] !== null && board[row][col] !== currentPlayer) {
-        setSelectedCell(position);
-        // Change to move mode
-        dispatch({ type: 'SET_MOVE_TYPE', payload: MoveType.MOVE });
-      }
-      // If clicked on an empty cell, place a piece
-      else if (board[row][col] === null) {
         dispatch({
           type: 'MAKE_MOVE',
           payload: { position }
         });
       }
+    } 
+    // If cell has a piece, handle selection
+    else {
+      dispatch({
+        type: 'SELECT_CELL',
+        payload: position
+      });
     }
-  }, [state, dispatch, selectedCell]);
+  }, [state, dispatch]);
   
   /**
    * Cancel the current selection
    */
   const cancelSelection = useCallback(() => {
-    setSelectedCell(null);
-    // Reset to placement mode
-    dispatch({ type: 'SET_MOVE_TYPE', payload: MoveType.PLACE });
+    dispatch({
+      type: 'SELECT_CELL',
+      payload: null
+    });
   }, [dispatch]);
   
   return {
-    selectedCell,
+    selectedCell: state.selectedCell,
     handleCellClick,
     cancelSelection
   };

@@ -19,7 +19,7 @@ import { createEmptyBoard } from '../game/gameUtils';
 import { checkWin, checkDraw } from '../game/win-detection/winConditions';
 
 // Define the game state interface
-interface GameState {
+export interface GameState {
   board: (number | null)[][];
   currentPlayer: number;
   playerConfigs: PlayerConfig[];
@@ -30,6 +30,8 @@ interface GameState {
   isDraw: boolean;
   winningCells: CellPosition[];
   gameStarted: boolean;
+  allowMovingOpponentPieces: boolean;
+  selectedCell: CellPosition | null;
 }
 
 // Define the initial game state
@@ -46,7 +48,9 @@ const initialGameState: GameState = {
   winner: null,
   isDraw: false,
   winningCells: [],
-  gameStarted: false
+  gameStarted: false,
+  allowMovingOpponentPieces: true, // Default to true for backward compatibility
+  selectedCell: null
 };
 
 // Define action types
@@ -55,7 +59,8 @@ type GameAction =
   | { type: 'MAKE_MOVE'; payload: { position: CellPosition; fromPosition?: CellPosition } }
   | { type: 'RESET_GAME' }
   | { type: 'SET_MOVE_TYPE'; payload: MoveType }
-  | { type: 'SET_PLAYER_CONFIGS'; payload: PlayerConfig[] };
+  | { type: 'SET_PLAYER_CONFIGS'; payload: PlayerConfig[] }
+  | { type: 'SELECT_CELL'; payload: CellPosition | null };
 
 /**
  * Creates an immutable copy of a 2D array
@@ -70,7 +75,7 @@ const deepCopyBoard = (board: (number | null)[][]): (number | null)[][] => {
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
     case 'START_GAME': {
-      const { boardSize, winLength, playerConfigs, gameStarted } = action.payload;
+      const { boardSize, winLength, playerConfigs, gameStarted, allowMovingOpponentPieces } = action.payload;
       
       // Determine if we're starting a new game or just updating settings
       const isStartingNewGame = gameStarted !== undefined ? gameStarted : true;
@@ -93,7 +98,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         winner: null,
         isDraw: false,
         winningCells: [],
-        gameStarted: isStartingNewGame
+        gameStarted: isStartingNewGame,
+        allowMovingOpponentPieces: allowMovingOpponentPieces !== undefined 
+          ? allowMovingOpponentPieces 
+          : state.allowMovingOpponentPieces
       };
     }
       
@@ -124,12 +132,19 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         } else if (state.moveType === MoveType.MOVE && fromPosition) {
           const [fromRow, fromCol] = fromPosition;
           
-          // Validate move conditions
+          // Validate that we're moving from a valid position
           if (
-            newBoard[row][col] !== null || // Destination must be empty
             newBoard[fromRow][fromCol] === null || // Source must have a piece
-            newBoard[fromRow][fromCol] === state.currentPlayer // Can't move own pieces
+            newBoard[row][col] !== null // Destination must be empty
           ) {
+            return state;
+          }
+          
+          // Check if we're trying to move an opponent's piece
+          const isOpponentPiece = newBoard[fromRow][fromCol] !== state.currentPlayer;
+          
+          // Don't allow moving opponent's pieces if the setting is disabled
+          if (isOpponentPiece && !state.allowMovingOpponentPieces) {
             return state;
           }
           
@@ -167,7 +182,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           currentPlayer: nextPlayer,
           winner: winResult.isWin ? pieceOwner : null, // Set the winner as the piece owner
           isDraw,
-          winningCells: winResult.winningCells
+          winningCells: winResult.winningCells,
+          selectedCell: null, // Clear selection after a move
+          moveType: MoveType.PLACE // Reset to placement mode
         };
       } catch (error) {
         console.error('Error in MAKE_MOVE action:', error);
@@ -183,7 +200,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         winner: null,
         isDraw: false,
         winningCells: [],
-        gameStarted: true
+        gameStarted: true,
+        selectedCell: null,
+        moveType: MoveType.PLACE
       };
     }
       
@@ -199,6 +218,79 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...state,
         playerConfigs: action.payload
       };
+    }
+      
+    case 'SELECT_CELL': {
+      // If null is passed, clear the selection
+      if (action.payload === null) {
+        return {
+          ...state,
+          selectedCell: null,
+          moveType: MoveType.PLACE
+        };
+      }
+      
+      const [row, col] = action.payload;
+      const { board, currentPlayer, winner, isDraw, gameStarted, allowMovingOpponentPieces } = state;
+      
+      // Don't allow selection if game is over or not started
+      if (winner !== null || isDraw || !gameStarted) {
+        return state;
+      }
+      
+      // If a cell is already selected
+      if (state.selectedCell) {
+        const [selectedRow, selectedCol] = state.selectedCell;
+        
+        // If clicking on the same cell, deselect it
+        if (selectedRow === row && selectedCol === col) {
+          return {
+            ...state,
+            selectedCell: null,
+            moveType: MoveType.PLACE
+          };
+        }
+        
+        // If clicked on empty cell, we'll let MAKE_MOVE handle the actual move
+        if (board[row][col] === null) {
+          return state;
+        }
+        
+        // If clicked on opponent's piece and moving opponent pieces is allowed
+        if (board[row][col] !== null && board[row][col] !== currentPlayer && allowMovingOpponentPieces) {
+          return {
+            ...state,
+            selectedCell: action.payload,
+            moveType: MoveType.MOVE
+          };
+        }
+        
+        // Clicked on own piece or other invalid selection, deselect
+        return {
+          ...state,
+          selectedCell: null,
+          moveType: MoveType.PLACE
+        };
+      }
+      // No cell selected yet
+      else {
+        // If clicked on empty cell, we'll let MAKE_MOVE handle placement
+        if (board[row][col] === null) {
+          return state;
+        }
+        
+        // If clicked on opponent's piece and moving opponent pieces is allowed
+        if (board[row][col] !== null && board[row][col] !== currentPlayer && allowMovingOpponentPieces) {
+          return {
+            ...state,
+            selectedCell: action.payload,
+            moveType: MoveType.MOVE
+          };
+        }
+        
+        // Clicked on own piece or other invalid selection
+        return state;
+      }
     }
       
     default:

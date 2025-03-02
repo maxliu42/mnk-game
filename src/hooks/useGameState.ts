@@ -6,6 +6,7 @@
  */
 import { useCallback } from 'react';
 import { useGame } from '../context';
+import type { GameState } from '../context/GameContext';
 import { GameConfig, PlayerConfig, BoardSize } from '../types/game.types';
 import { DEFAULT_PLAYER_CONFIGS } from '../constants';
 
@@ -51,7 +52,8 @@ export const useGameState = (): GameStateHook => {
         boardSize: config?.boardSize || { m, n },
         winLength: config?.winLength || k,
         playerConfigs: config?.playerConfigs || DEFAULT_PLAYER_CONFIGS.slice(0, config?.playerCount || 2),
-        gameStarted: true
+        gameStarted: true,
+        allowMovingOpponentPieces: config?.allowMovingOpponentPieces
       }
     });
   }, [dispatch]);
