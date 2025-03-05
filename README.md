@@ -1,4 +1,4 @@
-# M,N,K Game
+# [M,N,K Game](https://maxliu.me/mnk-game/)
 
 A web-based implementation of the [m,n,k game](https://en.wikipedia.org/wiki/M,n,k-game), where two players take turns placing their markers on an m×n board, with the goal of getting k markers in a row (horizontally, vertically, or diagonally).
 
