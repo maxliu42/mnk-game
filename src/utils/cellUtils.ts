@@ -1,7 +1,7 @@
 /**
  * Cell utility functions for styling and class name generation
  */
-import React from 'react';
+import type { CSSProperties } from 'react';
 
 /**
  * Generates cell class names based on cell state
@@ -39,7 +39,7 @@ export const getCellClassNames = (
  */
 export const getCellStyles = (
   optimalCellSize: string
-): React.CSSProperties => {
+): CSSProperties => {
   return {
     aspectRatio: '1 / 1',
     padding: 0,
