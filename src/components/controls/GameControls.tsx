@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { GameConfig, PlayerConfig as PlayerConfigType } from '../../types/game.types';
+import { PlayerConfig as PlayerConfigType } from '../../types/game.types';
 import { EmojiClickData } from 'emoji-picker-react';
 import PlayerConfig from './PlayerConfig';
 import { GAME_PRESETS } from '../../constants';
@@ -99,16 +99,13 @@ const GameControls: React.FC<GameControlsProps> = ({ defaultPlayerConfigs }) => 
     // Update global player configs
     updateGlobalPlayerConfigs(playerConfigs);
     
-    // Create a game config object
-    const config: GameConfig = {
+    startGame({
       boardSize: { m, n },
       winLength: k,
       allowMovingOpponentPieces,
       playerCount,
       playerConfigs
-    };
-    
-    startGame(m, n, k, config);
+    });
   };
 
   // Handle input changes with validation
