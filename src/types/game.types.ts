@@ -50,7 +50,6 @@ export interface GameState {
   gameStarted: boolean;
   allowMovingOpponentPieces: boolean;
   selectedCell: CellPosition | null;
-  moveHistory?: GameMove[]; // Optional for backward compatibility
 }
 
 /**
