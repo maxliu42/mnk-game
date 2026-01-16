@@ -3,18 +3,12 @@ import { MoveType } from '../../types/game.types';
 import { useGameState } from '../../hooks';
 import { useGame } from '../../context';
 
-interface GameInfoProps {
-  currentMoveType?: MoveType;
-}
-
 /**
  * Displays game status information and controls
  */
-const GameInfo: React.FC<GameInfoProps> = ({
-  currentMoveType = MoveType.PLACE,
-}) => {
+const GameInfo: React.FC = () => {
   const { state } = useGame();
-  const { winner, isDraw, currentPlayer, playerConfigs } = state;
+  const { winner, isDraw, currentPlayer, playerConfigs, moveType } = state;
   const { resetGame } = useGameState();
   
   const currentConfig = playerConfigs[currentPlayer];
@@ -37,7 +31,7 @@ const GameInfo: React.FC<GameInfoProps> = ({
       return 'Game ended in a draw!';
     }
     
-    const moveTypeText = currentMoveType === MoveType.PLACE 
+    const moveTypeText = moveType === MoveType.PLACE 
       ? 'placing a stone' 
       : 'moving an opponent\'s stone';
     

@@ -1,7 +1,7 @@
 /**
  * Game Context - provides React context for managing game state
  */
-import React, { createContext, useContext, useReducer, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { 
   MoveType, 
   PlayerConfig, 
@@ -208,14 +208,8 @@ interface GameProviderProps {
 export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialGameState);
   
-  // Memoize the context value to prevent unnecessary re-renders
-  const contextValue = useMemo(() => ({
-    state,
-    dispatch
-  }), [state]);
-  
   return (
-    <GameContext.Provider value={contextValue}>
+    <GameContext.Provider value={{ state, dispatch }}>
       {children}
     </GameContext.Provider>
   );

@@ -3,17 +3,27 @@
  */
 
 /**
+ * Minimum board dimension (rows or columns)
+ */
+export const MIN_BOARD_DIMENSION = 3;
+
+/**
+ * Minimum win length
+ */
+export const MIN_WIN_LENGTH = 3;
+
+/**
  * Default board size
  */
 export const DEFAULT_BOARD_SIZE = {
-  m: 3,  // rows
-  n: 3   // columns
+  m: MIN_BOARD_DIMENSION,
+  n: MIN_BOARD_DIMENSION
 };
 
 /**
  * Default win length (number of pieces in a row to win)
  */
-export const DEFAULT_WIN_LENGTH = 3;
+export const DEFAULT_WIN_LENGTH = MIN_WIN_LENGTH;
 
 /**
  * Maximum number of players

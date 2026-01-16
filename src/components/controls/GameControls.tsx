@@ -1,48 +1,27 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { EmojiClickData } from 'emoji-picker-react';
+import React, { useState } from 'react';
 import PlayerConfig from './PlayerConfig';
-import { GAME_PRESETS } from '../../constants';
+import { GAME_PRESETS, MIN_BOARD_DIMENSION, MIN_WIN_LENGTH } from '../../constants';
 import { useGameState } from '../../hooks';
 import { useGame } from '../../context';
 
 const GameControls: React.FC = () => {
   const { state } = useGame();
   const { playerConfigs } = state;
-  const { startGame, setPlayerCount, updatePlayerConfig } = useGameState();
+  const { startGame, setPlayerCount } = useGameState();
   
-  const [m, setM] = useState(3);
-  const [n, setN] = useState(3);
-  const [k, setK] = useState(3);
+  const [m, setM] = useState(MIN_BOARD_DIMENSION);
+  const [n, setN] = useState(MIN_BOARD_DIMENSION);
+  const [k, setK] = useState(MIN_WIN_LENGTH);
   const [allowMovingOpponentPieces, setAllowMovingOpponentPieces] = useState(true);
   const [error, setError] = useState('');
-  const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState<number | null>(null);
-
-  const handleClickOutside = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.emoji-picker-react') || 
-        target.closest('.emoji-picker-container') ||
-        target.closest('.player-symbol') ||
-        target.classList.contains('emoji-picker-overlay')) {
-      return;
-    }
-    setShowEmojiPicker(null);
-  }, []);
-
-  useEffect(() => {
-    if (showEmojiPicker !== null) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showEmojiPicker, handleClickOutside]);
 
   const handleStartGame = () => {
-    if (m < 3 || n < 3) {
-      setError('Board dimensions must be at least 3x3');
+    if (m < MIN_BOARD_DIMENSION || n < MIN_BOARD_DIMENSION) {
+      setError(`Board dimensions must be at least ${MIN_BOARD_DIMENSION}x${MIN_BOARD_DIMENSION}`);
       return;
     }
-    if (k < 3) {
-      setError('Win length must be at least 3');
+    if (k < MIN_WIN_LENGTH) {
+      setError(`Win length must be at least ${MIN_WIN_LENGTH}`);
       return;
     }
     if (k > Math.max(m, n)) {
@@ -75,11 +54,6 @@ const GameControls: React.FC = () => {
     setPlayerCount(preset.playerCount);
   };
 
-  const handleEmojiSelect = (emojiData: EmojiClickData, index: number) => {
-    updatePlayerConfig(index, { symbol: emojiData.emoji });
-    setShowEmojiPicker(null);
-  };
-
   return (
     <div className="game-setup">
       <h2>Game Setup</h2>
@@ -90,7 +64,7 @@ const GameControls: React.FC = () => {
           <input
             id="m-input"
             type="number"
-            min="3"
+            min={MIN_BOARD_DIMENSION}
             value={m}
             onChange={(e) => handleInputChange(setM, e.target.value)}
           />
@@ -101,7 +75,7 @@ const GameControls: React.FC = () => {
           <input
             id="n-input"
             type="number"
-            min="3"
+            min={MIN_BOARD_DIMENSION}
             value={n}
             onChange={(e) => handleInputChange(setN, e.target.value)}
           />
@@ -112,7 +86,7 @@ const GameControls: React.FC = () => {
           <input
             id="k-input"
             type="number"
-            min="3"
+            min={MIN_WIN_LENGTH}
             max={Math.max(m, n)}
             value={k}
             onChange={(e) => handleInputChange(setK, e.target.value)}
@@ -135,16 +109,7 @@ const GameControls: React.FC = () => {
         </div>
       </div>
       
-      <PlayerConfig
-        players={playerConfigs}
-        editingPlayerId={editingPlayerId}
-        showEmojiPicker={showEmojiPicker}
-        onUpdatePlayerName={(index, name) => updatePlayerConfig(index, { name })}
-        onToggleEditingPlayer={(index) => setEditingPlayerId(editingPlayerId === index ? null : index)}
-        onSymbolClick={(playerId, e) => { e.stopPropagation(); setShowEmojiPicker(playerId); }}
-        onEmojiSelect={handleEmojiSelect}
-        onCloseEmojiPicker={() => setShowEmojiPicker(null)}
-      />
+      <PlayerConfig />
       
       <div className="checkbox-group">
         <label htmlFor="move-opponent-pieces">
@@ -184,4 +149,4 @@ const GameControls: React.FC = () => {
   );
 };
 
-export default GameControls; 
+export default GameControls;

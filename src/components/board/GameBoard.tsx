@@ -58,8 +58,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           <BoardCell
             key={`${rowIndex}-${colIndex}`}
             cell={cell}
-            row={rowIndex}
-            col={colIndex}
+            position={[rowIndex, colIndex]}
             isWinning={winningCellSet.has(cellKey(rowIndex, colIndex))}
             isSelected={cellKey(rowIndex, colIndex) === selectedCellKey}
             symbolSizeClass={boardConfig.symbolClass}

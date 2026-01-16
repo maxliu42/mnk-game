@@ -13,8 +13,7 @@ const GameContent: React.FC = () => {
     winningCells,
     playerConfigs,
     gameStarted,
-    winLength,
-    moveType
+    winLength
   } = state;
 
   const {
@@ -80,9 +79,7 @@ const GameContent: React.FC = () => {
             />
           </div>
 
-          <GameInfo
-            currentMoveType={moveType}
-          />
+          <GameInfo />
 
           <div className="return-menu-container">
             <button

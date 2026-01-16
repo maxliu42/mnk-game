@@ -1,10 +1,10 @@
 import React from 'react';
+import { CellPosition } from '../../types/game.types';
 import { getCellClassNames, getCellStyles } from '../../utils';
 
 interface BoardCellProps {
   cell: number | null;
-  row: number;
-  col: number;
+  position: CellPosition;
   isWinning: boolean;
   isSelected: boolean;
   symbolSizeClass: string;
@@ -15,8 +15,7 @@ interface BoardCellProps {
 
 const BoardCell: React.FC<BoardCellProps> = ({
   cell,
-  row,
-  col,
+  position: [row, col],
   isWinning,
   isSelected,
   symbolSizeClass,
@@ -24,20 +23,12 @@ const BoardCell: React.FC<BoardCellProps> = ({
   playerSymbols,
   onClick
 }) => {
-  // Build class names for the cell using the utility function
-  const cellClassName = getCellClassNames(cell, isWinning, isSelected);
-  
-  // Generate cell styles based on the cell size using the utility function
-  const cellStyle = getCellStyles(optimalCellSize);
-  
   return (
     <button
-      className={cellClassName}
+      className={getCellClassNames(cell, isWinning, isSelected)}
       onClick={onClick}
       aria-label={`Cell ${row},${col}`}
-      data-row={row}
-      data-col={col}
-      style={cellStyle}
+      style={getCellStyles(optimalCellSize)}
     >
       {cell !== null && (
         <div className={`symbol ${symbolSizeClass}`}>
