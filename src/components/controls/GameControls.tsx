@@ -1,114 +1,63 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { PlayerConfig as PlayerConfigType } from '../../types/game.types';
+import React, { useState, useEffect, useCallback } from 'react';
 import { EmojiClickData } from 'emoji-picker-react';
 import PlayerConfig from './PlayerConfig';
 import { GAME_PRESETS } from '../../constants';
 import { useGameState } from '../../hooks';
+import { useGame } from '../../context';
 
-interface GameControlsProps {
-  defaultPlayerConfigs: PlayerConfigType[];
-}
-
-const GameControls: React.FC<GameControlsProps> = ({ defaultPlayerConfigs }) => {
+const GameControls: React.FC = () => {
+  const { state } = useGame();
+  const { playerConfigs } = state;
+  const { startGame, setPlayerCount, updatePlayerConfig } = useGameState();
+  
   const [m, setM] = useState(3);
   const [n, setN] = useState(3);
   const [k, setK] = useState(3);
-  const [playerCount, setPlayerCount] = useState(2);
   const [allowMovingOpponentPieces, setAllowMovingOpponentPieces] = useState(true);
-  const [playerConfigs, setPlayerConfigs] = useState<PlayerConfigType[]>(() => defaultPlayerConfigs.slice(0, 2));
   const [error, setError] = useState('');
   const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState<number | null>(null);
-  const prevPlayerCountRef = useRef<number>(2);
-  
-  const { startGame, setPlayerConfigs: updateGlobalPlayerConfigs } = useGameState();
 
-  const handleClickOutside = useCallback((e: MouseEvent | React.MouseEvent) => {
-    // Check if the click was on an emoji picker
+  const handleClickOutside = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    
-    // Skip if clicking on the emoji picker or its container
     if (target.closest('.emoji-picker-react') || 
         target.closest('.emoji-picker-container') ||
         target.closest('.player-symbol') ||
-        target.classList.contains('emoji-picker-overlay') ||
-        target.closest('.emoji-picker-overlay')) {
+        target.classList.contains('emoji-picker-overlay')) {
       return;
     }
-    
     setShowEmojiPicker(null);
   }, []);
 
-  // Update player configs when player count changes
-  useEffect(() => {
-    const prevCount = prevPlayerCountRef.current;
-    
-    // Only run if player count actually changed
-    if (prevCount !== playerCount) {
-      if (prevCount < playerCount) {
-        // Adding players - preserve existing and add new ones
-        const newConfigs = [...playerConfigs];
-        
-        // Add missing players
-        for (let i = prevCount; i < playerCount; i++) {
-          newConfigs.push(defaultPlayerConfigs[i]);
-        }
-        
-        setPlayerConfigs(newConfigs);
-      } else {
-        // Removing players - just trim the array
-        setPlayerConfigs(prev => prev.slice(0, playerCount));
-      }
-      
-      // Update the ref
-      prevPlayerCountRef.current = playerCount;
-    }
-  }, [playerCount, defaultPlayerConfigs]);
-
-  // Add event listener to close emoji picker when clicking outside
   useEffect(() => {
     if (showEmojiPicker !== null) {
       document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
   }, [showEmojiPicker, handleClickOutside]);
 
   const handleStartGame = () => {
-    // Validate inputs
     if (m < 3 || n < 3) {
       setError('Board dimensions must be at least 3x3');
       return;
     }
-
     if (k < 3) {
       setError('Win length must be at least 3');
       return;
     }
-
     if (k > Math.max(m, n)) {
       setError('Win length cannot be larger than the board dimensions');
       return;
     }
-
-    // Clear any errors and start the game
     setError('');
-    
-    // Update global player configs
-    updateGlobalPlayerConfigs(playerConfigs);
-    
     startGame({
       boardSize: { m, n },
       winLength: k,
       allowMovingOpponentPieces,
-      playerCount,
-      playerConfigs
+      playerCount: playerConfigs.length
     });
   };
 
-  // Handle input changes with validation
   const handleInputChange = (
     setter: React.Dispatch<React.SetStateAction<number>>,
     value: string
@@ -119,7 +68,6 @@ const GameControls: React.FC<GameControlsProps> = ({ defaultPlayerConfigs }) => 
     }
   };
 
-  // Apply preset configuration
   const applyPreset = (preset: typeof GAME_PRESETS[number]) => {
     setM(preset.boardSize.m);
     setN(preset.boardSize.n);
@@ -127,33 +75,8 @@ const GameControls: React.FC<GameControlsProps> = ({ defaultPlayerConfigs }) => 
     setPlayerCount(preset.playerCount);
   };
 
-  // Update player name
-  const updatePlayerName = (index: number, name: string) => {
-    const newConfigs = [...playerConfigs];
-    newConfigs[index] = { ...newConfigs[index], name };
-    setPlayerConfigs(newConfigs);
-  };
-
-  // Toggle player name editing
-  const toggleEditingPlayer = (index: number) => {
-    setEditingPlayerId(editingPlayerId === index ? null : index);
-  };
-
-  // Handle emoji selection
   const handleEmojiSelect = (emojiData: EmojiClickData, index: number) => {
-    const newConfigs = [...playerConfigs];
-    newConfigs[index] = { ...newConfigs[index], symbol: emojiData.emoji };
-    setPlayerConfigs(newConfigs);
-    setShowEmojiPicker(null); // Close the picker after selection
-  };
-
-  const handleSymbolClick = (playerId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowEmojiPicker(playerId);
-  };
-
-  // Close emoji picker
-  const closeEmojiPicker = () => {
+    updatePlayerConfig(index, { symbol: emojiData.emoji });
     setShowEmojiPicker(null);
   };
 
@@ -205,10 +128,10 @@ const GameControls: React.FC<GameControlsProps> = ({ defaultPlayerConfigs }) => 
             type="range"
             min="2"
             max="8"
-            value={playerCount}
+            value={playerConfigs.length}
             onChange={(e) => setPlayerCount(parseInt(e.target.value, 10))}
           />
-          <span className="player-count-value">{playerCount}</span>
+          <span className="player-count-value">{playerConfigs.length}</span>
         </div>
       </div>
       
@@ -216,11 +139,11 @@ const GameControls: React.FC<GameControlsProps> = ({ defaultPlayerConfigs }) => 
         players={playerConfigs}
         editingPlayerId={editingPlayerId}
         showEmojiPicker={showEmojiPicker}
-        onUpdatePlayerName={updatePlayerName}
-        onToggleEditingPlayer={toggleEditingPlayer}
-        onSymbolClick={handleSymbolClick}
+        onUpdatePlayerName={(index, name) => updatePlayerConfig(index, { name })}
+        onToggleEditingPlayer={(index) => setEditingPlayerId(editingPlayerId === index ? null : index)}
+        onSymbolClick={(playerId, e) => { e.stopPropagation(); setShowEmojiPicker(playerId); }}
         onEmojiSelect={handleEmojiSelect}
-        onCloseEmojiPicker={closeEmojiPicker}
+        onCloseEmojiPicker={() => setShowEmojiPicker(null)}
       />
       
       <div className="checkbox-group">

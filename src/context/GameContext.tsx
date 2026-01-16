@@ -14,7 +14,7 @@ import {
   DEFAULT_PLAYER_CONFIGS
 } from '../constants';
 import { createEmptyBoard } from '../game/gameUtils';
-import { checkWin, checkDraw } from '../game/win-detection/winConditions';
+import { checkWin, checkDraw } from '../game/winConditions';
 import { deepCopyBoard } from '../utils/cellUtils';
 
 // Define the initial game state
@@ -37,7 +37,8 @@ const initialGameState: GameState = {
 type GameAction =
   | { type: 'START_GAME'; payload: Partial<GameState> }
   | { type: 'RESET_GAME' }
-  | { type: 'SET_PLAYER_CONFIGS'; payload: PlayerConfig[] }
+  | { type: 'SET_PLAYER_COUNT'; payload: number }
+  | { type: 'UPDATE_PLAYER_CONFIG'; payload: { index: number; config: Partial<PlayerConfig> } }
   | { type: 'DESELECT' }
   | { type: 'CELL_CLICK'; payload: CellPosition };
 
@@ -101,8 +102,30 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       };
     }
       
-    case 'SET_PLAYER_CONFIGS': {
-      return { ...state, playerConfigs: action.payload };
+    case 'SET_PLAYER_COUNT': {
+      const newCount = action.payload;
+      const currentCount = state.playerConfigs.length;
+      
+      if (newCount === currentCount) return state;
+      
+      if (newCount > currentCount) {
+        // Add new players from defaults
+        const newConfigs = [
+          ...state.playerConfigs,
+          ...DEFAULT_PLAYER_CONFIGS.slice(currentCount, newCount)
+        ];
+        return { ...state, playerConfigs: newConfigs };
+      }
+      
+      // Remove players
+      return { ...state, playerConfigs: state.playerConfigs.slice(0, newCount) };
+    }
+    
+    case 'UPDATE_PLAYER_CONFIG': {
+      const { index, config } = action.payload;
+      const newConfigs = [...state.playerConfigs];
+      newConfigs[index] = { ...newConfigs[index], ...config };
+      return { ...state, playerConfigs: newConfigs };
     }
 
     case 'DESELECT': {

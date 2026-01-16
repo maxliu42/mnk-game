@@ -14,19 +14,18 @@ const GameInfo: React.FC<GameInfoProps> = ({
   currentMoveType = MoveType.PLACE,
 }) => {
   const { state } = useGame();
-  const { winner, isDraw } = state;
-  const { resetGame, getWinner, getCurrentPlayerAttribute } = useGameState();
+  const { winner, isDraw, currentPlayer, playerConfigs } = state;
+  const { resetGame } = useGameState();
   
-  // Generate the status message based on game state
+  const currentConfig = playerConfigs[currentPlayer];
+  const winnerConfig = winner !== null ? playerConfigs[winner] : null;
+  const isGameOver = winner !== null || isDraw;
+  
   const getStatusMessage = () => {
-    if (winner !== null) {
-      const winnerConfig = getWinner()!;
+    if (winnerConfig) {
       return (
         <>
-          <span 
-            className="player-symbol" 
-            style={{ color: winnerConfig.color }}
-          >
+          <span className="player-symbol" style={{ color: winnerConfig.color }}>
             {winnerConfig.symbol}
           </span>
           <span>{winnerConfig.name} wins!</span>
@@ -38,10 +37,6 @@ const GameInfo: React.FC<GameInfoProps> = ({
       return 'Game ended in a draw!';
     }
     
-    const currentPlayerName = getCurrentPlayerAttribute('name');
-    const currentPlayerSymbol = getCurrentPlayerAttribute('symbol');
-    const currentPlayerColor = getCurrentPlayerAttribute('color');
-    
     const moveTypeText = currentMoveType === MoveType.PLACE 
       ? 'placing a stone' 
       : 'moving an opponent\'s stone';
@@ -49,21 +44,14 @@ const GameInfo: React.FC<GameInfoProps> = ({
     return (
       <>
         <span className="current-player-indicator">
-          <span 
-            className="player-symbol" 
-            style={{ color: currentPlayerColor }}
-          >
-            {currentPlayerSymbol}
+          <span className="player-symbol" style={{ color: currentConfig.color }}>
+            {currentConfig.symbol}
           </span>
         </span>
-        <span>
-          {currentPlayerName}'s turn - {moveTypeText}
-        </span>
+        <span>{currentConfig.name}'s turn - {moveTypeText}</span>
       </>
     );
   };
-  
-  const isGameOver = winner !== null || isDraw;
   
   return (
     <div className="game-info">

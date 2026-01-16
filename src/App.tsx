@@ -3,8 +3,7 @@ import { GameBoard } from "./components/board";
 import { GameControls } from "./components/controls";
 import { GameInfo } from "./components/info";
 import { GameProvider, useGame } from "./context";
-import { useGameBoard, useGameState } from "./hooks";
-import { DEFAULT_PLAYER_CONFIGS } from "./constants";
+import { useGameState } from "./hooks";
 
 // GameContent component that uses the context
 const GameContent: React.FC = () => {
@@ -22,9 +21,8 @@ const GameContent: React.FC = () => {
     selectedCell,
     handleCellClick,
     cancelSelection,
-  } = useGameBoard();
-
-  const { resetGame } = useGameState();
+    resetGame
+  } = useGameState();
 
   // Set CSS variables for player colors when player configs change
   React.useEffect(() => {
@@ -68,9 +66,7 @@ const GameContent: React.FC = () => {
 
       {!gameStarted ? (
         <div className="game-container">
-          <GameControls
-            defaultPlayerConfigs={DEFAULT_PLAYER_CONFIGS}
-          />
+          <GameControls />
         </div>
       ) : (
         <>
