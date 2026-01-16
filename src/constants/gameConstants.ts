@@ -1,9 +1,6 @@
 /**
  * Game constants
- * This file contains constants used throughout the game
  */
-
-import { BoardSize } from '../types/game.types';
 
 /**
  * Default board size

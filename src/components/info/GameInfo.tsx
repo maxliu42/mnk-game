@@ -1,5 +1,5 @@
 import React from 'react';
-import { MoveType, PlayerConfig } from '../../types/game.types';
+import { MoveType } from '../../types/game.types';
 import { useGameState } from '../../hooks';
 import { useGame } from '../../context';
 
@@ -15,7 +15,7 @@ const GameInfo: React.FC<GameInfoProps> = ({
 }) => {
   const { state } = useGame();
   const { winner, isDraw } = state;
-  const { resetGame, getGameStatus, getWinner, getCurrentPlayerAttribute } = useGameState();
+  const { resetGame, getWinner, getCurrentPlayerAttribute } = useGameState();
   
   // Generate the status message based on game state
   const getStatusMessage = () => {
