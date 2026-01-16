@@ -6,7 +6,7 @@
  */
 import { useCallback } from 'react';
 import { useGame } from '../context';
-import { GameConfig, PlayerConfig, BoardSize, GameState } from '../types/game.types';
+import { GameConfig, PlayerConfig } from '../types/game.types';
 import { DEFAULT_PLAYER_CONFIGS } from '../constants';
 
 /**
@@ -14,7 +14,7 @@ import { DEFAULT_PLAYER_CONFIGS } from '../constants';
  */
 interface GameStateHook {
   /** Start a new game with given configuration */
-  startGame: (m: number, n: number, k: number, config?: GameConfig) => void;
+  startGame: (config: GameConfig) => void;
   /** Reset the current game */
   resetGame: (returnToMenu?: boolean) => void;
   /** Check if the game is currently active */
@@ -38,17 +38,17 @@ export const useGameState = (): GameStateHook => {
   const { state, dispatch } = useGame();
   
   /**
-   * Start a new game with the specified dimensions and configuration
+   * Start a new game with the specified configuration
    */
-  const startGame = useCallback((m: number, n: number, k: number, config?: GameConfig) => {
+  const startGame = useCallback((config: GameConfig) => {
     dispatch({
       type: 'START_GAME',
       payload: {
-        boardSize: config?.boardSize || { m, n },
-        winLength: config?.winLength || k,
-        playerConfigs: config?.playerConfigs || DEFAULT_PLAYER_CONFIGS.slice(0, config?.playerCount || 2),
+        boardSize: config.boardSize,
+        winLength: config.winLength,
+        playerConfigs: config.playerConfigs || DEFAULT_PLAYER_CONFIGS.slice(0, config.playerCount),
         gameStarted: true,
-        allowMovingOpponentPieces: config?.allowMovingOpponentPieces
+        allowMovingOpponentPieces: config.allowMovingOpponentPieces
       }
     });
   }, [dispatch]);
@@ -134,6 +134,4 @@ export const useGameState = (): GameStateHook => {
     getGameStatus,
     getWinner
   };
-};
-
-export default useGameState; 
+}; 
