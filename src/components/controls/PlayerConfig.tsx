@@ -1,56 +1,27 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { useGame } from '../../context';
-import { useGameState } from '../../hooks';
 
-/**
- * Player configuration component for editing player names and symbols
- */
 const PlayerConfig: React.FC = () => {
-  const { state } = useGame();
+  const { state, updatePlayerConfig } = useGame();
   const { playerConfigs } = state;
-  const { updatePlayerConfig } = useGameState();
-  
+
   const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState<number | null>(null);
-
-  const handleClickOutside = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.emoji-picker-react') || 
-        target.closest('.emoji-picker-container') ||
-        target.closest('.player-symbol') ||
-        target.classList.contains('emoji-picker-overlay')) {
-      return;
-    }
-    setShowEmojiPicker(null);
-  }, []);
-
-  useEffect(() => {
-    if (showEmojiPicker !== null) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showEmojiPicker, handleClickOutside]);
 
   const handleEmojiSelect = (emojiData: EmojiClickData, index: number) => {
     updatePlayerConfig(index, { symbol: emojiData.emoji });
     setShowEmojiPicker(null);
   };
 
+  const closeEmojiPicker = () => setShowEmojiPicker(null);
+
   return (
     <div className="player-preview">
       {showEmojiPicker !== null && (
-        <div 
-          className="emoji-picker-overlay" 
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowEmojiPicker(null);
-            }
-            e.stopPropagation();
-          }}
-        />
+        <div className="emoji-picker-overlay" onClick={closeEmojiPicker} />
       )}
-      
+
       <h3>Player Symbols</h3>
       <div className="player-config-grid">
         {playerConfigs.map((player, idx) => (
@@ -66,8 +37,8 @@ const PlayerConfig: React.FC = () => {
                   className="player-name-input"
                 />
               ) : (
-                <span 
-                  className="player-name" 
+                <span
+                  className="player-name"
                   onClick={() => setEditingPlayerId(idx)}
                   title="Click to edit player name"
                 >
@@ -75,28 +46,18 @@ const PlayerConfig: React.FC = () => {
                 </span>
               )}
             </div>
-            <div 
-              className="player-symbol" 
+            <div
+              className="player-symbol"
               style={{ color: player.color }}
-              onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(idx); }}
+              onClick={() => setShowEmojiPicker(idx)}
             >
               {player.symbol}
             </div>
             {showEmojiPicker === idx && (
-              <div 
-                className="emoji-picker-container" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.nativeEvent.stopImmediatePropagation();
-                }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }}
-              >
-                <EmojiPicker 
-                  onEmojiClick={(emojiData) => handleEmojiSelect(emojiData, idx)} 
-                  lazyLoadEmojis={true}
+              <div className="emoji-picker-container" onClick={(e) => e.stopPropagation()}>
+                <EmojiPicker
+                  onEmojiClick={(emojiData) => handleEmojiSelect(emojiData, idx)}
+                  lazyLoadEmojis
                   width={300}
                   height={400}
                 />

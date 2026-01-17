@@ -1,20 +1,17 @@
 import React from 'react';
-import { MoveType } from '../../types/game.types';
-import { useGameState } from '../../hooks';
 import { useGame } from '../../context';
+import { isGameOver } from '../../game';
+import { getRematchInfo } from '../../utils';
 
-/**
- * Displays game status information and controls
- */
 const GameInfo: React.FC = () => {
-  const { state } = useGame();
-  const { winner, isDraw, currentPlayer, playerConfigs, moveType } = state;
-  const { resetGame } = useGameState();
-  
+  const { state, gameMode, requestRematch, onlineState, resetGame } = useGame();
+  const { winner, isDraw, currentPlayer, playerConfigs, selectedCell, rematchRequests } = state;
+
   const currentConfig = playerConfigs[currentPlayer];
   const winnerConfig = winner !== null ? playerConfigs[winner] : null;
-  const isGameOver = winner !== null || isDraw;
-  
+  const gameOver = isGameOver(winner, isDraw);
+  const rematch = getRematchInfo(rematchRequests, onlineState.playerIndex);
+
   const getStatusMessage = () => {
     if (winnerConfig) {
       return (
@@ -26,15 +23,15 @@ const GameInfo: React.FC = () => {
         </>
       );
     }
-    
+
     if (isDraw) {
       return 'Game ended in a draw!';
     }
-    
-    const moveTypeText = moveType === MoveType.PLACE 
-      ? 'placing a stone' 
+
+    const moveTypeText = selectedCell === null
+      ? 'placing a stone'
       : 'moving an opponent\'s stone';
-    
+
     return (
       <>
         <span className="current-player-indicator">
@@ -46,22 +43,45 @@ const GameInfo: React.FC = () => {
       </>
     );
   };
-  
+
   return (
     <div className="game-info">
       <div className="status">{getStatusMessage()}</div>
-      
-      {isGameOver && (
-        <button 
-          className="btn btn-primary" 
+
+      {gameOver && gameMode === 'local' && (
+        <button
+          className="btn btn-primary"
           onClick={() => resetGame(false)}
           aria-label="Play Again"
         >
           Play Again
         </button>
       )}
+
+      {gameOver && gameMode === 'online' && (
+        <div className="rematch-controls">
+          {rematch.hasRequested ? (
+            <div className="rematch-waiting">
+              Waiting for others to accept rematch ({rematch.othersCount}/{rematch.totalOthers} ready)
+            </div>
+          ) : (
+            <button
+              className="btn btn-primary"
+              onClick={() => requestRematch()}
+              aria-label="Play Again"
+            >
+              {rematch.allOthersWant ? 'Accept Rematch' : 'Request Rematch'}
+            </button>
+          )}
+          {rematch.othersCount > 0 && !rematch.hasRequested && (
+            <div className="rematch-notification">
+              {rematch.othersCount} player{rematch.othersCount !== 1 ? 's' : ''} want{rematch.othersCount === 1 ? 's' : ''} a rematch!
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-export default GameInfo; 
+export default GameInfo;

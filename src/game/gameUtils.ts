@@ -1,34 +1,13 @@
-/**
- * Core utility functions for the m,n,k-game
- */
 import { BoardSize } from '../types/game.types';
 
-/**
- * Direction vectors for win checking
- */
-export const DIRECTIONS = [
-  [0, 1],   // horizontal
-  [1, 0],   // vertical
-  [1, 1],   // diagonal down-right
-  [1, -1],  // diagonal down-left
-];
+/** [dx, dy] vectors: horizontal, vertical, diagonal-down-right, diagonal-down-left */
+export const DIRECTIONS = [[0, 1], [1, 0], [1, 1], [1, -1]];
 
-/**
- * Checks if a position is valid on the board
- */
-export const isValidPosition = (
-  row: number, 
-  col: number, 
-  boardSize: BoardSize
-): boolean => {
-  return row >= 0 && row < boardSize.m && col >= 0 && col < boardSize.n;
-};
+export const isValidPosition = (row: number, col: number, boardSize: BoardSize): boolean =>
+  row >= 0 && row < boardSize.m && col >= 0 && col < boardSize.n;
 
-/**
- * Creates a new empty game board
- */
-export const createEmptyBoard = (m: number, n: number): (number | null)[][] => {
-  return Array(m)
-    .fill(null)
-    .map(() => Array(n).fill(null));
-}; 
+export const createEmptyBoard = (boardSize: BoardSize): (number | null)[][] =>
+  Array(boardSize.m).fill(null).map(() => Array(boardSize.n).fill(null));
+
+export const isGameOver = (winner: number | null, isDraw: boolean): boolean =>
+  winner !== null || isDraw; 

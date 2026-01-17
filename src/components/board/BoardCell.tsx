@@ -1,34 +1,39 @@
 import React from 'react';
-import { CellPosition } from '../../types/game.types';
-import { getCellClassNames, getCellStyles } from '../../utils';
 
 interface BoardCellProps {
   cell: number | null;
-  position: CellPosition;
   isWinning: boolean;
   isSelected: boolean;
   symbolSizeClass: string;
-  optimalCellSize: string;
+  cellSize: string;
   playerSymbols: string[];
+  ariaLabel: string;
   onClick: () => void;
 }
 
 const BoardCell: React.FC<BoardCellProps> = ({
   cell,
-  position: [row, col],
   isWinning,
   isSelected,
   symbolSizeClass,
-  optimalCellSize,
+  cellSize,
   playerSymbols,
+  ariaLabel,
   onClick
 }) => {
+  const className = [
+    'cell',
+    cell !== null && `player${cell + 1}`,
+    isWinning && 'winning-line',
+    isSelected && 'selected',
+  ].filter(Boolean).join(' ');
+
   return (
     <button
-      className={getCellClassNames(cell, isWinning, isSelected)}
+      className={className}
       onClick={onClick}
-      aria-label={`Cell ${row},${col}`}
-      style={getCellStyles(optimalCellSize)}
+      aria-label={ariaLabel}
+      style={{ width: cellSize, aspectRatio: '1 / 1' }}
     >
       {cell !== null && (
         <div className={`symbol ${symbolSizeClass}`}>
@@ -39,5 +44,4 @@ const BoardCell: React.FC<BoardCellProps> = ({
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders
-export default React.memo(BoardCell); 
+export default BoardCell;

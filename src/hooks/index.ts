@@ -1,4 +1,5 @@
 /**
  * Hooks module exports
  */
-export { useGameState } from './useGameState'; 
+export { useOnlineGame } from './useOnlineGame';
+export type { OnlineState } from './useOnlineGame';

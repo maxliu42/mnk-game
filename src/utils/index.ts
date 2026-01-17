@@ -3,4 +3,5 @@
  * This module provides exports for all utility functions used in the application
  */
 
-export * from './cellUtils'; 
+export * from './urlUtils';
+export * from './onlineUtils'; 

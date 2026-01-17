@@ -1,3 +1,2 @@
-// Export control components
-export { default as GameControls } from './GameControls.tsx';
-export { default as PlayerConfig } from './PlayerConfig.tsx'; 
+// Only export GameControls - other components are internal
+export { default as GameControls } from './GameControls'; 

@@ -1,59 +1,48 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { GameBoard } from "./components/board";
 import { GameControls } from "./components/controls";
 import { GameInfo } from "./components/info";
 import { GameProvider, useGame } from "./context";
-import { useGameState } from "./hooks";
+import { getGameIdFromUrl, clearGameIdFromUrl } from "./utils";
 
-// GameContent component that uses the context
 const GameContent: React.FC = () => {
-  const { state } = useGame();
   const {
-    board,
-    winningCells,
-    playerConfigs,
-    gameStarted,
-    winLength
-  } = state;
-
-  const {
-    selectedCell,
-    handleCellClick,
+    state,
+    gameMode,
+    onlineState,
+    isMyTurn,
+    isGameInProgress,
+    makeMove,
     cancelSelection,
-    resetGame
-  } = useGameState();
+    leaveOnlineGame,
+    resetGame,
+  } = useGame();
+  const { board, winningCells, playerConfigs, winLength, winner, isDraw, selectedCell } = state;
+  const boardContainerRef = useRef<HTMLDivElement>(null);
 
-  // Set CSS variables for player colors when player configs change
-  React.useEffect(() => {
-    const root = document.documentElement;
+  useEffect(() => {
     playerConfigs.forEach((config, index) => {
-      root.style.setProperty(`--player${index + 1}-color`, config.color);
+      document.documentElement.style.setProperty(`--player${index + 1}-color`, config.color);
     });
   }, [playerConfigs]);
 
-  const boardContainerRef = React.useRef<HTMLDivElement>(null);
-
-  // Add click event listener to detect clicks outside of board
-  React.useEffect(() => {
+  // Cancel selection on outside click
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        selectedCell &&
-        boardContainerRef.current &&
-        !boardContainerRef.current.contains(event.target as Node)
-      ) {
+      if (selectedCell && boardContainerRef.current && !boardContainerRef.current.contains(event.target as Node)) {
         cancelSelection();
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [selectedCell, cancelSelection]);
 
-  // Custom click handler
-  const handleBoardCellClick = (row: number, col: number) => {
-    handleCellClick([row, col]);
+  const handleReturnToMenu = () => {
+    if (gameMode === 'online') {
+      leaveOnlineGame();
+      clearGameIdFromUrl();
+    }
+    resetGame(true);
   };
 
   return (
@@ -63,30 +52,39 @@ const GameContent: React.FC = () => {
         <p>Get {winLength} in a row to win!</p>
       </header>
 
-      {!gameStarted ? (
+      {!isGameInProgress ? (
         <div className="game-container">
           <GameControls />
         </div>
       ) : (
         <>
+          {gameMode === 'online' && (
+            <div className="online-game-indicator">
+              <span className="player-badge">
+                You are Player {(onlineState.playerIndex ?? 0) + 1}
+                {!isMyTurn && winner === null && !isDraw && (
+                  <span className="waiting-turn"> - Waiting for opponent...</span>
+                )}
+              </span>
+            </div>
+          )}
+
           <div className="board-container" ref={boardContainerRef}>
             <GameBoard
               board={board}
-              onCellClick={handleBoardCellClick}
+              onCellClick={(row, col) => makeMove([row, col])}
               winningCells={winningCells}
               selectedCell={selectedCell}
               playerSymbols={playerConfigs.map(config => config.symbol)}
+              disabled={gameMode === 'online' && !isMyTurn}
             />
           </div>
 
           <GameInfo />
 
           <div className="return-menu-container">
-            <button
-              className="btn btn-secondary"
-              onClick={() => resetGame(true)}
-            >
-              Return to Menu
+            <button className="btn btn-secondary" onClick={handleReturnToMenu}>
+              {gameMode === 'online' ? 'Leave Game' : 'Return to Menu'}
             </button>
           </div>
         </>
@@ -95,13 +93,10 @@ const GameContent: React.FC = () => {
   );
 };
 
-// Wrap the app with the provider
-const App: React.FC = () => {
-  return (
-    <GameProvider>
-      <GameContent />
-    </GameProvider>
-  );
-};
+const App: React.FC = () => (
+  <GameProvider initialGameId={getGameIdFromUrl()}>
+    <GameContent />
+  </GameProvider>
+);
 
 export default App;

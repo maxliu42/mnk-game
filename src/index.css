@@ -691,4 +691,194 @@ button {
     transform: translate(-50%, -50%);
     z-index: 1010;
   }
+}
+
+/* ===== Online Multiplayer Styles ===== */
+
+/* Mode toggle */
+.mode-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mode-btn {
+  padding: 0.6rem 1.5rem;
+  font-weight: 500;
+  background-color: white;
+  color: var(--text-color);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-btn:first-child {
+  border-right: 1px solid var(--border-color);
+}
+
+.mode-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.mode-btn:hover:not(.active) {
+  background-color: var(--border-color);
+}
+
+/* Online controls */
+.online-controls {
+  padding: 1rem;
+  text-align: center;
+}
+
+.online-status {
+  padding: 1rem;
+  color: var(--text-color);
+}
+
+.online-status p {
+  font-size: 1.1rem;
+}
+
+.online-waiting {
+  padding: 1rem;
+}
+
+.online-waiting h3 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.online-waiting p {
+  margin-bottom: 0.75rem;
+  color: var(--text-color);
+}
+
+.share-link-container {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  max-width: 100%;
+}
+
+.share-link-input {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  min-width: 0;
+}
+
+.share-link-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.online-error {
+  padding: 1rem;
+}
+
+.online-playing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.player-indicator {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: rgba(79, 70, 229, 0.1);
+  border-radius: 8px;
+  color: var(--primary-color);
+}
+
+/* Online game indicator (shown during gameplay) */
+.online-game-indicator {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.player-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: rgba(79, 70, 229, 0.1);
+  border-radius: 8px;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.waiting-turn {
+  color: var(--text-color);
+  opacity: 0.7;
+  font-weight: normal;
+}
+
+/* Disabled board state (waiting for opponent's turn) */
+.board-disabled {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.board-disabled .cell {
+  cursor: not-allowed;
+}
+
+/* Player count fixed display for online mode */
+.player-count-fixed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-count-fixed .player-count-value {
+  background: none;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* Button disabled state */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary:disabled:hover {
+  background-color: var(--primary-color);
+}
+
+/* Rematch controls */
+.rematch-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.rematch-waiting {
+  color: var(--text-color);
+  opacity: 0.8;
+  font-style: italic;
+  padding: 0.5rem 1rem;
+  background-color: rgba(79, 70, 229, 0.1);
+  border-radius: 8px;
+}
+
+.rematch-notification {
+  color: var(--primary-color);
+  font-weight: 500;
+  animation: pulse-gentle 1.5s infinite;
 } 
