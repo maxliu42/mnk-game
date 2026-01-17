@@ -1,8 +1,6 @@
 import { BoardSize, CellPosition, MoveResult } from '../types/game.types';
 import { checkWin, checkDraw } from './winConditions';
 
-export type { MoveResult };
-
 const copyBoard = <T>(board: T[][]): T[][] => board.map(row => [...row]);
 
 export const processMove = (

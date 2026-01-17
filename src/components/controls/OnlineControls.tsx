@@ -21,25 +21,31 @@ const OnlineControls: React.FC<OnlineControlsProps> = ({ isCreating }) => {
     clearGameIdFromUrl();
   };
 
-  const renderContent = () => {
-    if (onlineState.status === 'error') {
-      return (
+  if (onlineState.status === 'error') {
+    return (
+      <div className="online-controls">
         <div className="online-error">
           <p className="error-message">{onlineState.error}</p>
           <button className="btn btn-secondary" onClick={handleLeaveGame}>
             Back to Menu
           </button>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
-    if (onlineState.status === 'creating' || isCreating || onlineState.status === 'joining') {
-      const message = onlineState.status === 'joining' ? 'Joining game...' : 'Creating game...';
-      return <div className="online-status"><p>{message}</p></div>;
-    }
-
-    const playersNeeded = onlineState.playerCount - onlineState.playersJoined;
+  if (onlineState.status === 'creating' || isCreating || onlineState.status === 'joining') {
+    const message = onlineState.status === 'joining' ? 'Joining game...' : 'Creating game...';
     return (
+      <div className="online-controls">
+        <div className="online-status"><p>{message}</p></div>
+      </div>
+    );
+  }
+
+  const playersNeeded = onlineState.playerCount - onlineState.playersJoined;
+  return (
+    <div className="online-controls">
       <div className="online-waiting">
         <h3>Waiting for {playersNeeded} more player{playersNeeded !== 1 ? 's' : ''}...</h3>
         <p className="player-status">{onlineState.playersJoined} of {onlineState.playerCount} players joined</p>
@@ -60,10 +66,8 @@ const OnlineControls: React.FC<OnlineControlsProps> = ({ isCreating }) => {
           Cancel
         </button>
       </div>
-    );
-  };
-
-  return <div className="online-controls">{renderContent()}</div>;
+    </div>
+  );
 };
 
 export default OnlineControls;

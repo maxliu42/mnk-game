@@ -24,7 +24,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const colCount = board[0].length;
   const maxDimension = Math.max(rowCount, colCount);
   
-  const boardConfig = BOARD_SIZE_CONFIG.find(c => maxDimension <= c.maxDimension) ?? BOARD_SIZE_CONFIG[3];
+  const boardConfig = BOARD_SIZE_CONFIG.find(c => maxDimension <= c.maxDimension) ?? BOARD_SIZE_CONFIG.at(-1)!;
 
   const winningCellSet = useMemo(() => 
     new Set(winningCells.map(([r, c]) => `${r},${c}`)),

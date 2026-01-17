@@ -2,24 +2,23 @@ import React, { useState } from 'react';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { useGame } from '../../context';
 
+type ActiveEditor = { type: 'name' | 'emoji'; index: number } | null;
+
 const PlayerConfig: React.FC = () => {
   const { state, updatePlayerConfig } = useGame();
   const { playerConfigs } = state;
 
-  const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState<number | null>(null);
+  const [activeEditor, setActiveEditor] = useState<ActiveEditor>(null);
 
   const handleEmojiSelect = (emojiData: EmojiClickData, index: number) => {
     updatePlayerConfig(index, { symbol: emojiData.emoji });
-    setShowEmojiPicker(null);
+    setActiveEditor(null);
   };
-
-  const closeEmojiPicker = () => setShowEmojiPicker(null);
 
   return (
     <div className="player-preview">
-      {showEmojiPicker !== null && (
-        <div className="emoji-picker-overlay" onClick={closeEmojiPicker} />
+      {activeEditor?.type === 'emoji' && (
+        <div className="emoji-picker-overlay" onClick={() => setActiveEditor(null)} />
       )}
 
       <h3>Player Symbols</h3>
@@ -27,19 +26,19 @@ const PlayerConfig: React.FC = () => {
         {playerConfigs.map((player, idx) => (
           <div key={idx} className="player-config-item">
             <div className="player-name-container">
-              {editingPlayerId === idx ? (
+              {activeEditor?.type === 'name' && activeEditor.index === idx ? (
                 <input
                   type="text"
                   value={player.name}
                   onChange={(e) => updatePlayerConfig(idx, { name: e.target.value })}
-                  onBlur={() => setEditingPlayerId(null)}
+                  onBlur={() => setActiveEditor(null)}
                   autoFocus
                   className="player-name-input"
                 />
               ) : (
                 <span
                   className="player-name"
-                  onClick={() => setEditingPlayerId(idx)}
+                  onClick={() => setActiveEditor({ type: 'name', index: idx })}
                   title="Click to edit player name"
                 >
                   {player.name}
@@ -49,11 +48,11 @@ const PlayerConfig: React.FC = () => {
             <div
               className="player-symbol"
               style={{ color: player.color }}
-              onClick={() => setShowEmojiPicker(idx)}
+              onClick={() => setActiveEditor({ type: 'emoji', index: idx })}
             >
               {player.symbol}
             </div>
-            {showEmojiPicker === idx && (
+            {activeEditor?.type === 'emoji' && activeEditor.index === idx && (
               <div className="emoji-picker-container" onClick={(e) => e.stopPropagation()}>
                 <EmojiPicker
                   onEmojiClick={(emojiData) => handleEmojiSelect(emojiData, idx)}

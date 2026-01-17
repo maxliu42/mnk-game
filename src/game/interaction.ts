@@ -1,6 +1,5 @@
 import { CellPosition, ClickOutcome } from '../types/game.types';
-
-export type { ClickOutcome };
+import { sameCell } from './gameUtils';
 
 interface InterpretClickParams {
   board: (number | null)[][];
@@ -9,8 +8,6 @@ interface InterpretClickParams {
   allowMovingOpponentPieces: boolean;
   click: CellPosition;
 }
-
-const sameCell = (a: CellPosition, b: CellPosition): boolean => a[0] === b[0] && a[1] === b[1];
 
 export const interpretCellClick = (params: InterpretClickParams): ClickOutcome => {
   const { board, currentPlayer, selectedCell, allowMovingOpponentPieces, click } = params;

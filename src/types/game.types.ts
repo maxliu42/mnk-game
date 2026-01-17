@@ -5,18 +5,6 @@ export interface BoardSize {
 
 export type CellPosition = [number, number];
 
-export enum MoveType {
-  PLACE = 'place',
-  MOVE = 'move'
-}
-
-export interface GameMove {
-  type: MoveType;
-  player: number;
-  position: CellPosition;
-  fromPosition?: CellPosition; // Only for MOVE type
-}
-
 export interface GameState {
   board: (number | null)[][];
   currentPlayer: number;
